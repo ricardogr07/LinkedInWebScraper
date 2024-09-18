@@ -1,5 +1,3 @@
-from Utils.logger import Logger
-
 class JobScraperConfig:
     '''
     String representation of the job scraper configuration.
