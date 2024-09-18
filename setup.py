@@ -8,7 +8,7 @@ setup(
     description="A library for scraping LinkedIn job postings.",
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/LinkedInWebScraper",
+    url="https://github.com/ricardogr07/LinkedInWebScraper",
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
