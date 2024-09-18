@@ -12,6 +12,7 @@ from Utils.file_manager import FileManager
 from OpenAIHandler.openai_handler import OpenAIHandler
 
 from .job_scraper_config import JobScraperConfig
+from .job_scraper_config_factory import JobScraperConfigFactory
 from .linkedin_scraper import LinkedInJobScraper
 from .job_scraper import JobScraper
 from .job_description_processor import JobDescriptionProcessor
@@ -21,6 +22,7 @@ from .utils import get_random_header, fetch_until_success
 
 __all__ = [
     'JobScraperConfig', 
+    'JobScraperConfigFactory'
     'LinkedInJobScraper', 
     'JobScraper',
     'JobDescriptionProcessor',
