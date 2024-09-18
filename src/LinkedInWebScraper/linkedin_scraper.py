@@ -1,10 +1,10 @@
 import pandas as pd
 
-from LinkedInScraper.job_scraper import JobScraper
-from LinkedInScraper.job_scraper_config import JobScraperConfig
-from LinkedInScraper.job_data_cleaner import JobDataCleaner
-from LinkedInScraper.job_title_classifier import JobTitleClassifier
-from LinkedInScraper.job_description_processor import JobDescriptionProcessor
+from LinkedInWebScraper.job_scraper import JobScraper
+from LinkedInWebScraper.job_scraper_config import JobScraperConfig
+from LinkedInWebScraper.job_data_cleaner import JobDataCleaner
+from LinkedInWebScraper.job_title_classifier import JobTitleClassifier
+from LinkedInWebScraper.job_description_processor import JobDescriptionProcessor
 from OpenAIHandler.openai_handler import OpenAIHandler
 from Utils.logger import Logger
 

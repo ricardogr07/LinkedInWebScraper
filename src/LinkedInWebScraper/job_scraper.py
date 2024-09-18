@@ -3,8 +3,8 @@ import pandas as pd
 import math
 
 from Utils.logger import Logger
-from LinkedInScraper.job_scraper_config import JobScraperConfig
-from LinkedInScraper.utils import fetch_until_success
+from LinkedInWebScraper.job_scraper_config import JobScraperConfig
+from LinkedInWebScraper.utils import fetch_until_success
 from Utils.constants import TIME_POSTED_OPTION, REMOTE_OPTION
 
 

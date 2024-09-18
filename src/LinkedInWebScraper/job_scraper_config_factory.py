@@ -1,4 +1,4 @@
-from LinkedInScraper.job_scraper_config import JobScraperConfig
+from LinkedInWebScraper.job_scraper_config import JobScraperConfig
 
 class JobScraperConfigFactory:
     @staticmethod

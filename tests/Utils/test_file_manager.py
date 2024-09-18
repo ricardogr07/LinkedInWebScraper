@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import pytest
 from unittest.mock import MagicMock, patch
-from LinkedInScraper.job_scraper_config import JobScraperConfig
+from LinkedInWebScraper.job_scraper_config import JobScraperConfig
 from Utils.logger import Logger
 from datetime import datetime
 from Utils.file_manager import FileManager

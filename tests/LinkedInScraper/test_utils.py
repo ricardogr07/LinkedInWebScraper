@@ -3,7 +3,7 @@ import requests
 from Utils.logger import Logger
 from Utils.constants import USER_AGENT_HEADERS
 from unittest.mock import patch, MagicMock
-from LinkedInScraper.utils import get_random_header, fetch_until_success
+from LinkedInWebScraper.utils import get_random_header, fetch_until_success
 
 # Test get_random_header
 def test_get_random_header():

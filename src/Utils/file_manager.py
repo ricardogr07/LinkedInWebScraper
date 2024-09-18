@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from Utils.logger import Logger
-from LinkedInScraper.job_scraper_config import JobScraperConfig
+from LinkedInWebScraper.job_scraper_config import JobScraperConfig
 from datetime import datetime
 
 
