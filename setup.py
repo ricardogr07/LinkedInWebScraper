@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='LinkedInWebscraper',
-    version='1.0.0',
+    version='1.0.1',
     author="Ricardo García Ramírez",
     author_email="rgr.5882@gmail.com",
     description="A library for scraping LinkedIn job postings.",

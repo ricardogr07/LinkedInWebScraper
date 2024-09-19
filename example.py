@@ -4,8 +4,8 @@ logger = Logger('example.log')
 
 # Define scraper configuration
 config = JobScraperConfig(
-    position="Data Scientist",
-    location="Monterrey",
+    position="Data Analyst",
+    location="San Francisco",
     remote="REMOTE"
 )
 

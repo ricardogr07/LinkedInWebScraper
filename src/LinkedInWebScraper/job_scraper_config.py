@@ -1,3 +1,4 @@
+from LinkedInWebScraper.job_scraper_advanced_config import JobScraperAdvancedConfig
 class JobScraperConfig:
     '''
     String representation of the job scraper configuration.
@@ -12,16 +13,17 @@ class JobScraperConfig:
     Returns:
         str: A formatted string representing the JobScraperConfig object with its attributes.
     '''
-    def __init__(self, position: str, location: str, openai_enabled: bool = False, time_posted: str = 'DAY', remote: str = 'ALL', distance: int = 10):
+    def __init__(self, position: str, location: str, openai_enabled: bool = False, time_posted: str = 'DAY', remote: str = 'ALL', distance: int = 10, advanced_config: JobScraperAdvancedConfig = None):
         self.position = position
         self.location = location
         self.openai_enabled = openai_enabled
         self.time_posted = time_posted
         self.remote = remote
         self.distance = distance
+        self.advanced_config = advanced_config
 
     def __str__(self):
         """String representation of the configuration."""
         return (f"JobScraperConfig(position={self.position}, location={self.location}, openai_enabled={self.openai_enabled}"
-                f"time_posted={self.time_posted}, remote={self.remote}, distance={self.distance})")
+                f", time_posted={self.time_posted}, remote={self.remote}, distance={self.distance})")
 

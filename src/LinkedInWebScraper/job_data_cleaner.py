@@ -8,11 +8,12 @@ class JobDataCleaner:
     def __init__(self, logger):
         self.logger = logger
 
-    def clean_jobs_dataframe(self, df) ->pd.DataFrame:
+    def clean_jobs_dataframe(self, df, location_mapping) ->pd.DataFrame:
         """Main method to clean and preprocess the job DataFrame."""
         self.logger.log.info("Starting data cleaning process.")
 
-        df = self.process_location_data(df)
+        if location_mapping != None:
+            df = self.process_location_data(df)
 
         df = self.process_urls_and_job_ids(df)
 
@@ -148,9 +149,9 @@ class JobDataCleaner:
 
         self.logger.log.info("Standardizing the 'JobFunction' column.")
         df_jobs['JobFunction'] = df_jobs['JobFunction'].replace({
-            'Research and Design': 'R&D',
-            'Design and Product Management': 'Product Management'
-        })
+        'Research and Design': 'R&D',
+        'Design and Product Management': 'Product Management'
+        }, regex=False)
 
         df_jobs['JobFunction'] = df_jobs['JobFunction'].apply(standardize_job_function)
         return df_jobs
@@ -243,14 +244,13 @@ class JobDataCleaner:
 
         self.logger.log.info("Starting job data processing.")
         
-        if tech_stack_categories is None:
-            tech_stack_categories = TECH_STACK_CATEGORIES
 
         df_jobs = self.extract_min_years(df_jobs)
         
         df_jobs = self.categorize_studies(df_jobs)
         
-        df_jobs = self.categorize_tech_stack(df_jobs, tech_stack_categories)
+        if tech_stack_categories != None:
+            df_jobs = self.categorize_tech_stack(df_jobs, tech_stack_categories)
         
         self.logger.log.info("Completed job data processing.")
         
