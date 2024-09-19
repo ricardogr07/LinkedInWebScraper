@@ -1,13 +1,13 @@
 from LinkedInWebScraper import LinkedInJobScraper, JobScraperConfig, JobScraperAdvancedConfig, Logger
 
-logger = Logger('example.log')
+logger = Logger('example_advanced_config.log')
 
 KEYWORDS_LIST = [
                     'data', 'analytics', 'business intelligence', 'bi',
                     'statistical', 'statistics', 'analysis', 'power bi'
                 ]
 
-advanced_config = JobScraperAdvancedConfig(KEYWORDS_LIST)
+advanced_config = JobScraperAdvancedConfig(KEYWORDS=KEYWORDS_LIST)
 
 # Define scraper configuration
 config = JobScraperConfig(
