@@ -13,6 +13,7 @@ from OpenAIHandler.openai_handler import OpenAIHandler
 
 from .job_scraper_config import JobScraperConfig
 from .job_scraper_config_factory import JobScraperConfigFactory
+from .job_scraper_advanced_config import JobScraperAdvancedConfig
 from .linkedin_scraper import LinkedInJobScraper
 from .job_scraper import JobScraper
 from .job_description_processor import JobDescriptionProcessor
@@ -22,7 +23,8 @@ from .utils import get_random_header, fetch_until_success
 
 __all__ = [
     'JobScraperConfig', 
-    'JobScraperConfigFactory'
+    'JobScraperConfigFactory',
+    'JobScraperAdvancedConfig',
     'LinkedInJobScraper', 
     'JobScraper',
     'JobDescriptionProcessor',

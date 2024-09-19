@@ -5,7 +5,7 @@ from Utils.logger import Logger
 from Utils.constants import DATA_SCIENCE_KEYWORDS
 
 class JobTitleClassifier:
-    def __init__(self, logger: Logger, keywords: list = None):
+    def __init__(self, logger: Logger, position: str, keywords: list = None):
         """
         Initialize the classifier with a list of keywords.
 
@@ -14,12 +14,12 @@ class JobTitleClassifier:
                              If None, a default list for data science-related jobs is used.
         """
         self.logger = logger
-        if keywords is None:
-            self.keywords = DATA_SCIENCE_KEYWORDS
-            self.logger.log.info(f"Initialized JobTitleClassifier with default keywords: {self.keywords}")
-        else:
+        self.position = position
+        if keywords is not None:
             self.keywords = [keyword.lower() for keyword in keywords]
-            self.logger.log.info(f"Initialized JobTitleClassifier with custom keywords: {self.keywords}")
+            self.logger.log.info(f"Initialized JobTitleClassifier with keywords: {self.keywords} for {self.position}")
+        else:
+            self.logger.log.info(f'No keywords were given. Running without classifying job titles.')
 
     def classify_title(self, df_jobs):
         """
@@ -35,17 +35,17 @@ class JobTitleClassifier:
             self.logger.log.error("The DataFrame does not contain a 'Title' column. No action will be performed.")
             return df_jobs
 
-        self.logger.log.info(f"Starting classification of {len(df_jobs)} job titles.")
+        self.logger.log.info(f"Starting classification of {len(df_jobs)} {self.position} job titles.")
 
         df_jobs['DS_Related'] = df_jobs['Title'].apply(self._classify_single_title)
 
         related_jobs_count = df_jobs['DS_Related'].sum()
-        self.logger.log.info(f"Classified {related_jobs_count} jobs as related to Data Science.")
+        self.logger.log.info(f"Classified {related_jobs_count} jobs as related to {self.position}.")
 
         df_jobs = df_jobs.loc[df_jobs['DS_Related'] == 1].copy()
         df_jobs.drop(columns=['DS_Related'], inplace=True)
 
-        self.logger.log.info(f"Returning DataFrame with {len(df_jobs)} data science-related jobs.")
+        self.logger.log.info(f"Returning DataFrame with {len(df_jobs)} {self.position} related jobs.")
 
         return df_jobs
 

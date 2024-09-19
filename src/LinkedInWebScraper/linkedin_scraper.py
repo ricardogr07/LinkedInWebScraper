@@ -8,6 +8,8 @@ from LinkedInWebScraper.job_description_processor import JobDescriptionProcessor
 from OpenAIHandler.openai_handler import OpenAIHandler
 from Utils.logger import Logger
 
+from Utils.constants import LOCATION_MAPPING, DATA_SCIENCE_KEYWORDS, TECH_STACK_CATEGORIES
+
 class LinkedInJobScraper:
     def __init__(self, logger: Logger, config: JobScraperConfig):
         self.config = config
@@ -15,10 +17,30 @@ class LinkedInJobScraper:
 
         self.job_scraper = JobScraper(config=self.config, logger=self.logger)
         self.job_data_cleaner = JobDataCleaner(self.logger)
-        self.job_title_classifier = JobTitleClassifier(self.logger)
+
+        self.initialize_advanced_config()
+ 
+        self.job_title_classifier = JobTitleClassifier(self.logger, self.config.position, self.KEYWORDS)
+
         if self.config.openai_enabled:
             openai_handler = OpenAIHandler(self.logger)
             self.description_processor = JobDescriptionProcessor(openai_handler, self.logger)
+
+    def initialize_advanced_config(self):
+        """
+        Initializes advanced configuration attributes (LOCATION_MAPPING, KEYWORDS, SKILLS_CATEGORIES)
+        from the advanced configuration if provided.
+        """
+        # Set defaults to None
+        self.LOCATION_MAPPING = None
+        self.KEYWORDS = None
+        self.SKILLS_CATEGORIES = None
+
+        # Check if advanced_config is provided and set attributes if available
+        if self.config.advanced_config:
+            self.LOCATION_MAPPING = getattr(self.config.advanced_config, 'LOCATION_MAPPING', None)
+            self.KEYWORDS = getattr(self.config.advanced_config, 'KEYWORDS', None)
+            self.SKILLS_CATEGORIES = getattr(self.config.advanced_config, 'SKILLS_CATEGORIES', None)
 
     def run(self) -> pd.DataFrame:
         """Main function to run the LinkedIn job scraping process."""
@@ -31,7 +53,11 @@ class LinkedInJobScraper:
                 return pd.DataFrame()
 
             cleaned_jobs = self.clean_jobs(scraped_jobs)
-            classified_jobs = self.classify_jobs(cleaned_jobs)
+
+            if self.KEYWORDS != None:
+                classified_jobs = self.classify_jobs(cleaned_jobs)
+            else:
+                classified_jobs = cleaned_jobs
 
             if classified_jobs.empty:
                 self.logger.log.warning(f"No jobs remain after title classification.")
@@ -66,8 +92,8 @@ class LinkedInJobScraper:
 
     def clean_jobs(self, scraped_jobs: pd.DataFrame) -> pd.DataFrame:
         """Clean the scraped job data using JobDataCleaner."""
-        try:        
-            cleaned_jobs = self.job_data_cleaner.clean_jobs_dataframe(scraped_jobs)
+        try:
+            cleaned_jobs = self.job_data_cleaner.clean_jobs_dataframe(scraped_jobs, self.LOCATION_MAPPING)
             if cleaned_jobs.empty:
                 self.logger.log.warning(f"No jobs remain after cleaning for {self.config.remote} {self.config.position}.")
             return cleaned_jobs
@@ -115,7 +141,7 @@ class LinkedInJobScraper:
     def final_processing(self, enriched_jobs: pd.DataFrame) -> pd.DataFrame:
         """Perform final processing on the enriched job data."""
         try:
-            final_jobs = self.job_data_cleaner.process_enriched_job_data(enriched_jobs)
+            final_jobs = self.job_data_cleaner.process_enriched_job_data(enriched_jobs,self.SKILLS_CATEGORIES)
             return final_jobs
         except Exception as e:
             self.logger.log.exception(f"Failed during final job data processing: {e}")
