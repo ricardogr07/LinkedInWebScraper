@@ -45,7 +45,7 @@ jobs:
             git fetch origin data:data
             git worktree add .tmp/data-branch data
           else
-            git worktree add --orphan .tmp/data-branch data
+            git worktree add --orphan -b data .tmp/data-branch
           fi
 
       - name: Restore persisted state

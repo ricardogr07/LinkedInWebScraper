@@ -69,6 +69,7 @@ def test_daily_workflow_persists_state_branch_and_artifacts() -> None:
     text = _read(".github/workflows/daily-scrape.yml")
     assert "schedule:" in text
     assert "data" in text
+    assert "git worktree add --orphan -b data .tmp/data-branch" in text
     assert ".github/runtime/daily.toml" in text
     assert "actions/upload-artifact@v4" in text
     assert "[automation] Daily scrape failure" in text
