@@ -1,3 +1,5 @@
+"""Compatibility helpers for deprecated legacy namespaces."""
+
 from __future__ import annotations
 
 import warnings

@@ -42,6 +42,16 @@ By default, managed outputs resolve under `artifacts/`:
 
 Explicit absolute paths and explicit nested relative paths are preserved as given.
 
+## Current Storage Model
+
+Phase 4 still uses filesystem-backed artifacts as the default persistence model:
+
+- CSV exports are the current reusable job-data output
+- logs are written alongside other managed artifacts
+- no database migration is required to run the current library locally
+
+A database-backed storage layer is planned later, but it is intentionally deferred until after the canonical runtime and offline validation story are stable.
+
 ## Daily Runs
 
 `DailyScrapeService` coordinates a multi-city run across the default remote variants:
@@ -51,3 +61,9 @@ Explicit absolute paths and explicit nested relative paths are preserved as give
 - `ON-SITE`
 
 You can override the city list, position, output directory, and combined output file name without changing the lower-level scraper classes.
+
+## Migration Notes
+
+- Import from `linkedin_web_scraper` for new work.
+- Keep legacy imports only when validating compatibility or supporting older callers.
+- `main.py` and the example scripts remain part of the compatibility surface until a later major-version cleanup.

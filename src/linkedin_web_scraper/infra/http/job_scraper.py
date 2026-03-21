@@ -1,3 +1,5 @@
+"""HTTP-backed LinkedIn result-page and detail-page scraping helpers."""
+
 from __future__ import annotations
 
 import logging
@@ -26,6 +28,7 @@ class JobScraper:
         request_timeout: float | None = None,
         request_policy: HttpRequestPolicy | None = None,
     ):
+        """Initialize the scraper with config, logging, and HTTP dependencies."""
         self.config = config
         self.logger = resolve_logger(logger, name=__name__)
         self.session = session or requests.Session()
@@ -116,7 +119,7 @@ class JobScraper:
         """Generate the paginated URL for fetching jobs from LinkedIn."""
         return f"{self.generate_main_url()}&start={start}"
 
-    def parse_job_data(self, html_content) -> None:
+    def parse_job_data(self, html_content: bytes | str) -> None:
         """Parse the job data from the HTML content and add it to the jobs list."""
         try:
             soup = BeautifulSoup(html_content, "html.parser")
@@ -192,22 +195,23 @@ class JobScraper:
                     "li", class_="description__job-criteria-item"
                 )
                 for item in criteria_items:
+                    criteria_text_element = item.find(
+                        "span",
+                        class_="description__job-criteria-text",
+                    )
+                    criteria_text = (
+                        criteria_text_element.get_text(strip=True)
+                        if criteria_text_element is not None
+                        else "N/A"
+                    )
                     if "Seniority level" in item.get_text():
-                        seniority_level = item.find(
-                            "span", class_="description__job-criteria-text"
-                        ).get_text(strip=True)
+                        seniority_level = criteria_text
                     elif "Employment type" in item.get_text():
-                        employment_type = item.find(
-                            "span", class_="description__job-criteria-text"
-                        ).get_text(strip=True)
+                        employment_type = criteria_text
                     elif "Job function" in item.get_text():
-                        job_function = item.find(
-                            "span", class_="description__job-criteria-text"
-                        ).get_text(strip=True)
+                        job_function = criteria_text
                     elif "Industries" in item.get_text():
-                        industries = item.find(
-                            "span", class_="description__job-criteria-text"
-                        ).get_text(strip=True)
+                        industries = criteria_text
 
             num_applicants_tag = soup.find("figcaption", class_="num-applicants__caption") or soup.find(
                 "span",

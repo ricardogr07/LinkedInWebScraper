@@ -1,6 +1,10 @@
+"""Title-filtering helpers for narrowing results to relevant jobs."""
+
 from __future__ import annotations
 
 import re
+
+import pandas as pd
 
 from linkedin_web_scraper.infra.logging import resolve_logger
 
@@ -22,7 +26,7 @@ class JobTitleClassifier:
         else:
             self.logger.info("No keywords were given. Running without classifying job titles.")
 
-    def classify_title(self, df_jobs):
+    def classify_title(self, df_jobs: pd.DataFrame) -> pd.DataFrame:
         """Classify job titles based on keywords and filter out unrelated jobs."""
         if not self.keywords:
             return df_jobs

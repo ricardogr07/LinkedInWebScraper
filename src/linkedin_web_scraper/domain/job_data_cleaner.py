@@ -1,3 +1,5 @@
+"""Dataframe normalization helpers for raw and enriched LinkedIn job data."""
+
 from __future__ import annotations
 
 import re
@@ -16,7 +18,7 @@ class JobDataCleaner:
         self.logger = resolve_logger(logger, name=__name__)
 
     def clean_jobs_dataframe(self, df: pd.DataFrame, location_mapping) -> pd.DataFrame:
-        """Clean the raw scrape output into a normalized jobs dataframe."""
+        """Clean raw scrape output into a normalized jobs dataframe."""
         self.logger.info("Starting data cleaning process.")
 
         if location_mapping is not None:
@@ -234,19 +236,23 @@ class JobDataCleaner:
     def convert_posted_time(self, df_jobs: pd.DataFrame) -> pd.DataFrame:
         """Convert 'PostedTime' into dates."""
 
+        def extract_quantity(text: str) -> int:
+            match = re.search(r"\d+", text)
+            return int(match.group()) if match is not None else 1
+
         def convert_posted_time(text: str):
             today = datetime.today()
 
             if "hour" in text:
                 return today
             if "day" in text:
-                days = int(re.search(r"\d+", text).group()) if re.search(r"\d+", text) else 1
+                days = extract_quantity(text)
                 return today - timedelta(days=days)
             if "week" in text:
-                weeks = int(re.search(r"\d+", text).group()) if re.search(r"\d+", text) else 1
+                weeks = extract_quantity(text)
                 return today - timedelta(days=weeks * 7)
             if "month" in text:
-                months = int(re.search(r"\d+", text).group()) if re.search(r"\d+", text) else 1
+                months = extract_quantity(text)
                 return today - timedelta(days=months * 30)
             return "N/A"
 
@@ -280,7 +286,7 @@ class JobDataCleaner:
     def process_enriched_job_data(
         self, df_jobs: pd.DataFrame, tech_stack_categories: dict[str, list[str]] | None = None
     ) -> pd.DataFrame:
-        """Post-process enriched job data."""
+        """Post-process enriched job data after description enrichment."""
         self.logger.info("Starting job data processing.")
         df_jobs = self.extract_min_years(df_jobs)
         df_jobs = self.categorize_studies(df_jobs)
@@ -337,25 +343,27 @@ class JobDataCleaner:
         self, df_jobs: pd.DataFrame, tech_stack_categories: dict[str, list[str]]
     ) -> pd.DataFrame:
         """Categorize tech stack values into predefined groups."""
-        for category in tech_stack_categories:
-            df_jobs[category] = 0
+        category_flags: dict[str, list[int]] = {category: [] for category in tech_stack_categories}
+        other_flags: list[int] = []
 
-        df_jobs["Other"] = 0
-
-        def categorize_single_tech_stack(tech_stack: str, index: int) -> None:
-            tech_stack_elements = [element.strip() for element in tech_stack.split(",")]
-            category_found = False
+        for tech_stack in df_jobs["TechStack"].fillna(""):
+            tech_stack_elements = [element.strip() for element in str(tech_stack).split(",")]
+            matched_categories: set[str] = set()
 
             for category, items in tech_stack_categories.items():
-                for item in items:
-                    if any(item in element for element in tech_stack_elements):
-                        df_jobs.at[index, category] = 1
-                        category_found = True
+                if any(any(item in element for element in tech_stack_elements) for item in items):
+                    matched_categories.add(category)
 
-            if not category_found:
-                df_jobs.at[index, "Other"] = 1
+            for category in tech_stack_categories:
+                category_flags[category].append(1 if category in matched_categories else 0)
 
-        for index, row in df_jobs.iterrows():
-            categorize_single_tech_stack(row["TechStack"], index)
+            other_flags.append(0 if matched_categories else 1)
 
+        for category, values in category_flags.items():
+            df_jobs[category] = values
+
+        df_jobs["Other"] = other_flags
         return df_jobs
+
+
+

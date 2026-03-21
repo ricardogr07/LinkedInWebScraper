@@ -1,3 +1,5 @@
+"""High-level orchestration for the LinkedIn scraping pipeline."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +16,12 @@ from linkedin_web_scraper.infra.openai.openai_handler import OpenAIHandler
 
 
 class LinkedInJobScraper:
-    """Coordinate scrape, cleaning, classification, and optional enrichment."""
+    """Coordinate scrape, cleaning, classification, and optional enrichment.
+
+    The class owns the end-to-end library workflow for a single scrape request:
+    scrape search results, normalize the dataframe, optionally filter titles,
+    fetch detail pages, and optionally enrich descriptions through OpenAI.
+    """
 
     def __init__(
         self,
@@ -25,6 +32,7 @@ class LinkedInJobScraper:
         job_data_cleaner: JobDataCleaner | None = None,
         openai_handler: OpenAIHandler | None = None,
     ):
+        """Build a scraper pipeline with optional dependency overrides."""
         self.config = config
         self.logger = resolve_logger(logger, name=__name__)
 
@@ -56,7 +64,7 @@ class LinkedInJobScraper:
             self.skills_categories = self.config.advanced_config.SKILLS_CATEGORIES
 
     def run(self) -> pd.DataFrame:
-        """Run the end-to-end scrape pipeline."""
+        """Run the end-to-end scrape pipeline and return the resulting dataframe."""
         try:
             self.logger.info(
                 "Running scraping job for %s %s positions.",
@@ -136,7 +144,7 @@ class LinkedInJobScraper:
             return pd.DataFrame()
 
     def fetch_job_details(self, classified_jobs: pd.DataFrame) -> pd.DataFrame:
-        """Fetch job details using the JobScraper."""
+        """Fetch job-detail pages for the classified job dataframe."""
         try:
             return self.job_scraper.fetch_job_details(classified_jobs)
         except Exception:

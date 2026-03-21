@@ -58,6 +58,12 @@ python main.py
 
 That workflow uses `DailyScrapeService` under the hood and writes city-level plus combined CSV outputs to `artifacts/jobs/` by default.
 
+## Migration Guidance
+
+- Prefer imports from `linkedin_web_scraper` in new code.
+- Keep existing legacy imports only when you are explicitly validating backward compatibility.
+- Treat `example.py` and `main.py` as compatibility-sensitive smoke paths during refactors.
+
 ## Validate Local Changes
 
 The default local quality gates are:
@@ -71,5 +77,5 @@ python -m mkdocs build --strict
 For the currently enforced type-check seam, run:
 
 ```bash
-python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/interfaces/cli/main.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py
+python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py
 ```

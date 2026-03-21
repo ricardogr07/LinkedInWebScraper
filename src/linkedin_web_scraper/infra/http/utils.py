@@ -1,3 +1,5 @@
+"""Low-level HTTP request helpers used by the scraper layer."""
+
 from __future__ import annotations
 
 import random
@@ -27,7 +29,11 @@ def fetch_until_success(
     policy: HttpRequestPolicy | None = None,
     sleep: Callable[[float], None] | None = None,
 ):
-    """Attempt to fetch a URL until success or the retry budget is exhausted."""
+    """Attempt to fetch a URL until success or the retry budget is exhausted.
+
+    Returns the response on HTTP 200. Returns ``None`` for non-retryable
+    responses, terminal request failures, or when the retry budget is exhausted.
+    """
     active_logger = resolve_logger(logger, name=__name__)
     request_policy = policy or HttpRequestPolicy()
     request_policy = request_policy.with_overrides(

@@ -16,10 +16,22 @@
 
 ::: linkedin_web_scraper.config.options
 
+## Domain
+
+::: linkedin_web_scraper.domain.job_data_cleaner
+
+::: linkedin_web_scraper.domain.job_title_classifier
+
 ## Infrastructure
 
 ::: linkedin_web_scraper.infra.logging
 
 ::: linkedin_web_scraper.infra.paths
 
+## HTTP
+
 ::: linkedin_web_scraper.infra.http.policy
+
+::: linkedin_web_scraper.infra.http.utils
+
+::: linkedin_web_scraper.infra.http.job_scraper

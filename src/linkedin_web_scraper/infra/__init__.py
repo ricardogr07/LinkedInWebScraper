@@ -1,3 +1,5 @@
+"""Infrastructure exports for logging and managed artifact paths."""
+
 from linkedin_web_scraper.infra.logging import Logger, configure_logging, get_logger, resolve_logger
 from linkedin_web_scraper.infra.paths import (
     DEFAULT_ARTIFACTS_DIR,
