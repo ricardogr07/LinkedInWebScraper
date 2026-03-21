@@ -1,9 +1,11 @@
+from __future__ import annotations
+
+from pathlib import Path
+
 import pandas as pd
 
-from LinkedInWebScraper.job_scraper_config import JobScraperConfig
+from linkedin_web_scraper.application.daily_scrape_service import DailyScrapeService
 from LinkedInWebScraper.job_scraper_config_factory import JobScraperConfigFactory
-from LinkedInWebScraper.linkedin_scraper import LinkedInJobScraper
-from Utils.file_manager import FileManager
 from Utils.logger import Logger
 
 
@@ -14,34 +16,15 @@ def run_ds_daily_scraper(
     location: str = "Monterrey",
     time_posted: str = "DAY",
     file_name: str | None = None,
-):
-    try:
-        logger.log.info(f"Starting web scraping for {position} in {location}.")
-
-        remote_types = ["REMOTE", "HYBRID", "ON-SITE"]
-        scraper_results = {}
-
-        for remote in remote_types:
-            config = JobScraperConfigFactory.create(
-                position, location, openai_enabled, time_posted, remote
-            )
-            scraper = LinkedInJobScraper(logger=logger, config=config)
-            scraper_results[f"scraper_{remote.lower()}"] = scraper.run()
-
-        # Concatenate all the results into a single DataFrame
-        df_remote = scraper_results.get("scraper_remote", pd.DataFrame())
-        df_hybrid = scraper_results.get("scraper_hybrid", pd.DataFrame())
-        df_on_site = scraper_results.get("scraper_on-site", pd.DataFrame())
-
-        df_jobs_all = pd.concat([df_remote, df_hybrid, df_on_site], ignore_index=True)
-
-        # Save to CSV
-        file_manager_config = JobScraperConfig(position, location, remote="ALL")
-        file_manager = FileManager(logger, file_manager_config)
-        if file_name is not None:
-            file_manager.save_jobs_to_csv(df=df_jobs_all, file_name=file_name, append=True)
-        else:
-            file_manager.save_jobs_to_csv(df=df_jobs_all)
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    output_dir: str | Path | None = None,
+) -> pd.DataFrame:
+    """Compatibility wrapper for running the legacy daily scrape flow."""
+    service = DailyScrapeService(logger=logger, config_factory=JobScraperConfigFactory)
+    return service.run_for_location(
+        position=position,
+        location=location,
+        openai_enabled=openai_enabled,
+        time_posted=time_posted,
+        file_name=file_name,
+        output_dir=output_dir,
+    )

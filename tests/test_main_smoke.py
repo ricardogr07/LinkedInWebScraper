@@ -6,8 +6,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-import pandas as pd
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -20,40 +18,25 @@ class FakeLogger:
 
 
 def test_main_daily_run_smoke(monkeypatch):
-    import process_ds_jobs
     import Utils.logger
+    from linkedin_web_scraper.application import daily_scrape_service
 
-    scraped_calls = []
+    calls = []
 
-    def fake_run_ds_daily_scraper(*, logger, location, file_name, **kwargs):
-        scraped_calls.append((logger.filename, location, file_name, kwargs))
-        return None
+    class FakeService:
+        def __init__(self, logger, **kwargs):
+            calls.append(("init", logger.filename, kwargs))
+            self.logger = logger
 
-    csv_frames = {
-        "LinkedIn_Jobs_Data_Scientist_Monterrey.csv": pd.DataFrame([{"Title": "MTY"}]),
-        "LinkedIn_Jobs_Data_Scientist_Guadalajara.csv": pd.DataFrame([{"Title": "GDL"}]),
-        "LinkedIn_Jobs_Data_Scientist_Mexico_City.csv": pd.DataFrame([{"Title": "CDMX"}]),
-    }
+        def run_daily(self, **kwargs):
+            calls.append(("run_daily", kwargs))
+            return None
 
-    read_csv_calls = []
-
-    def fake_read_csv(path, *args, **kwargs):
-        read_csv_calls.append(path)
-        return csv_frames[path]
-
-    to_csv_mock = MagicMock()
-
-    monkeypatch.setattr(process_ds_jobs, "run_ds_daily_scraper", fake_run_ds_daily_scraper)
     monkeypatch.setattr(Utils.logger, "Logger", FakeLogger)
-    monkeypatch.setattr(pd, "read_csv", fake_read_csv)
-    monkeypatch.setattr(pd.DataFrame, "to_csv", to_csv_mock)
+    monkeypatch.setattr(daily_scrape_service, "DailyScrapeService", FakeService)
 
     runpy.run_path(str(ROOT / "main.py"), run_name="__main__")
 
-    assert [call[1] for call in scraped_calls] == ["Monterrey", "Guadalajara", "Mexico City"]
-    assert read_csv_calls == [
-        "LinkedIn_Jobs_Data_Scientist_Monterrey.csv",
-        "LinkedIn_Jobs_Data_Scientist_Guadalajara.csv",
-        "LinkedIn_Jobs_Data_Scientist_Mexico_City.csv",
-    ]
-    assert to_csv_mock.call_args.args[0] == "LinkedIn_Jobs_Data_Scientist_Mexico.csv"
+    assert calls[0][0] == "init"
+    assert calls[0][1] == "main.log"
+    assert calls[1] == ("run_daily", {})
