@@ -1,5 +1,6 @@
 import logging
 
+
 class Logger:
     """
     A singleton class for logging messages to a file and the console.
@@ -25,7 +26,7 @@ class Logger:
             Logger: The singleton instance of Logger.
         """
         if cls._instance is None:
-            cls._instance = super(Logger, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, filename: str):
@@ -36,9 +37,13 @@ class Logger:
             filename (str): The name of the log file.
         """
 
-        if not hasattr(self, 'log'):
-            logging.basicConfig(filename=filename, level=logging.INFO,
-                                format='%(asctime)s %(levelname)s %(message)s', force=True)
+        if not hasattr(self, "log"):
+            logging.basicConfig(
+                filename=filename,
+                level=logging.INFO,
+                format="%(asctime)s %(levelname)s %(message)s",
+                force=True,
+            )
             stream_handler = logging.StreamHandler()
             stream_handler.setLevel(logging.INFO)
             self.log = logging.getLogger()

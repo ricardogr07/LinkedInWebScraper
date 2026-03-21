@@ -1,11 +1,22 @@
-from LinkedInWebScraper import LinkedInJobScraper, JobScraperConfig, JobScraperAdvancedConfig, Logger
+from LinkedInWebScraper import (
+    JobScraperAdvancedConfig,
+    JobScraperConfig,
+    LinkedInJobScraper,
+    Logger,
+)
 
-logger = Logger('example_advanced_config.log')
+logger = Logger("example_advanced_config.log")
 
 KEYWORDS_LIST = [
-                    'data', 'analytics', 'business intelligence', 'bi',
-                    'statistical', 'statistics', 'analysis', 'power bi'
-                ]
+    "data",
+    "analytics",
+    "business intelligence",
+    "bi",
+    "statistical",
+    "statistics",
+    "analysis",
+    "power bi",
+]
 
 advanced_config = JobScraperAdvancedConfig(KEYWORDS=KEYWORDS_LIST)
 
@@ -13,12 +24,12 @@ advanced_config = JobScraperAdvancedConfig(KEYWORDS=KEYWORDS_LIST)
 config = JobScraperConfig(
     position="Data Analyst",
     location="San Francisco",
-    remote="REMOTE", 
-    advanced_config=advanced_config
+    remote="REMOTE",
+    advanced_config=advanced_config,
 )
 
 # Initialize the scraper
-scraper = LinkedInJobScraper(logger,config)
+scraper = LinkedInJobScraper(logger, config)
 
 # Scrape job data
 job_data = scraper.run()

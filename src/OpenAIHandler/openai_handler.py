@@ -1,8 +1,11 @@
-from Utils.logger import Logger
-import os
 import json
-from openai import OpenAI
+import os
+
 from dotenv import load_dotenv
+from openai import OpenAI
+
+from Utils.logger import Logger
+
 
 class OpenAIHandler:
     """
@@ -16,38 +19,38 @@ class OpenAIHandler:
         create_messages: Creates a list of messages for processing job descriptions.
         generate_chat_completion: Generates chat completions using the OpenAI client and returns the parsed result.
     """
+
     def __init__(self, logger=None):
         """
-        Initialize the OpenAIHandler with a logger instance and configure the OpenAI client 
+        Initialize the OpenAIHandler with a logger instance and configure the OpenAI client
         by loading the API key from environment variables.
-        
+
         """
         self.logger = logger if logger is not None else Logger("openai.log")
         self.logger.log.info("Initializing OpenAI Handler")
         self._configure_openai()
 
-
     def _configure_openai(self):
-        '''
-        Configures the OpenAI client by loading the API key from environment variables. 
-        If an error occurs while loading the environment variables, an EnvironmentError is raised 
+        """
+        Configures the OpenAI client by loading the API key from environment variables.
+        If an error occurs while loading the environment variables, an EnvironmentError is raised
         indicating that the API Key is missing in the .env file.
-        '''
+        """
         self.logger.log.info("Configuring OpenAI Client")
 
         try:
             load_dotenv()
-            OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+            OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
         except Exception as e:
             self.logger.log.error(f"Error loading environment variables: {e}")
-            raise EnvironmentError("API Key is missing in .env file.")        
-        
+            raise OSError("API Key is missing in .env file.") from e
+
         self.client = OpenAI(
             api_key=OPENAI_API_KEY,
         )
 
     def create_messages(self, description: str) -> list:
-        '''
+        """
         Creates a list of messages for processing job descriptions.
 
         Parameters:
@@ -55,11 +58,11 @@ class OpenAIHandler:
 
         Returns:
             list: A list containing system and user messages for job description processing.
-        '''
+        """
         return [
             {
                 "role": "system",
-                "content": """You are an assistant that extracts structured data from job descriptions in JSON format. Please ensure the output matches the following keys: Description, TechStack, YoE, MinLevelStudies, and English. The English key should be a boolean (True/False) that indicates whether the position requires English language proficiency, if the initial job description is in English, assume English as a requirement. If the information is in a language other than English, translate it and use English in the description you parse to the JSON. Do not add information about the company in the Description, only include relevant information about the job. Add all relevant information about the techstack, including all languages and hard skills. Return only the JSON object as the output, without anything else before or after it."""
+                "content": """You are an assistant that extracts structured data from job descriptions in JSON format. Please ensure the output matches the following keys: Description, TechStack, YoE, MinLevelStudies, and English. The English key should be a boolean (True/False) that indicates whether the position requires English language proficiency, if the initial job description is in English, assume English as a requirement. If the information is in a language other than English, translate it and use English in the description you parse to the JSON. Do not add information about the company in the Description, only include relevant information about the job. Add all relevant information about the techstack, including all languages and hard skills. Return only the JSON object as the output, without anything else before or after it.""",
             },
             {
                 "role": "user",
@@ -78,13 +81,12 @@ class OpenAIHandler:
 
     Now process this new job description:
     "{description}"
-    """
-            }
+    """,
+            },
         ]
 
-
     def generate_chat_completion(self, messages: list) -> dict:
-        '''
+        """
         Generates chat completions using the OpenAI client and returns the parsed result.
 
         Parameters:
@@ -95,7 +97,7 @@ class OpenAIHandler:
 
         Raises:
             Exception: If an unexpected error occurs during the chat completion generation process.
-        ''' 
+        """
         try:
             completion = self.client.chat.completions.create(
                 messages=messages,
@@ -104,9 +106,9 @@ class OpenAIHandler:
             )
             result = completion.choices[0].message.content
             parsed_result = json.loads(result)
-       
+
             return parsed_result
-        
+
         except Exception as e:
             self.logger.log.error(f"Unexpected error: {e}")
             raise

@@ -1,8 +1,7 @@
 import re
-import pandas as pd
 
 from Utils.logger import Logger
-from Utils.constants import DATA_SCIENCE_KEYWORDS
+
 
 class JobTitleClassifier:
     def __init__(self, logger: Logger, position: str, keywords: list = None):
@@ -17,9 +16,11 @@ class JobTitleClassifier:
         self.position = position
         if keywords is not None:
             self.keywords = [keyword.lower() for keyword in keywords]
-            self.logger.log.info(f"Initialized JobTitleClassifier with keywords: {self.keywords} for {self.position}")
+            self.logger.log.info(
+                f"Initialized JobTitleClassifier with keywords: {self.keywords} for {self.position}"
+            )
         else:
-            self.logger.log.info(f'No keywords were given. Running without classifying job titles.')
+            self.logger.log.info("No keywords were given. Running without classifying job titles.")
 
     def classify_title(self, df_jobs):
         """
@@ -31,21 +32,27 @@ class JobTitleClassifier:
         Returns:
             pd.DataFrame: Filtered DataFrame with only jobs related to the keywords.
         """
-        if 'Title' not in df_jobs.columns:
-            self.logger.log.error("The DataFrame does not contain a 'Title' column. No action will be performed.")
+        if "Title" not in df_jobs.columns:
+            self.logger.log.error(
+                "The DataFrame does not contain a 'Title' column. No action will be performed."
+            )
             return df_jobs
 
-        self.logger.log.info(f"Starting classification of {len(df_jobs)} {self.position} job titles.")
+        self.logger.log.info(
+            f"Starting classification of {len(df_jobs)} {self.position} job titles."
+        )
 
-        df_jobs['DS_Related'] = df_jobs['Title'].apply(self._classify_single_title)
+        df_jobs["DS_Related"] = df_jobs["Title"].apply(self._classify_single_title)
 
-        related_jobs_count = df_jobs['DS_Related'].sum()
+        related_jobs_count = df_jobs["DS_Related"].sum()
         self.logger.log.info(f"Classified {related_jobs_count} jobs as related to {self.position}.")
 
-        df_jobs = df_jobs.loc[df_jobs['DS_Related'] == 1].copy()
-        df_jobs.drop(columns=['DS_Related'], inplace=True)
+        df_jobs = df_jobs.loc[df_jobs["DS_Related"] == 1].copy()
+        df_jobs.drop(columns=["DS_Related"], inplace=True)
 
-        self.logger.log.info(f"Returning DataFrame with {len(df_jobs)} {self.position} related jobs.")
+        self.logger.log.info(
+            f"Returning DataFrame with {len(df_jobs)} {self.position} related jobs."
+        )
 
         return df_jobs
 
@@ -62,7 +69,7 @@ class JobTitleClassifier:
         title_lower = title.lower()
 
         for keyword in self.keywords:
-            if re.search(rf'\b{keyword}\b', title_lower):
+            if re.search(rf"\b{keyword}\b", title_lower):
                 self.logger.log.debug(f"Title '{title}' matches keyword '{keyword}'")
                 return 1
 

@@ -1,9 +1,11 @@
-from OpenAIHandler.openai_handler import OpenAIHandler
-from Utils.logger import Logger
 import pandas as pd
 
+from OpenAIHandler.openai_handler import OpenAIHandler
+from Utils.logger import Logger
+
+
 class JobDescriptionProcessor:
-    def __init__(self, openai_handler: OpenAIHandler, logger:Logger):
+    def __init__(self, openai_handler: OpenAIHandler, logger: Logger):
         """
         Initialize the JobDescriptionProcessor.
 
@@ -14,7 +16,7 @@ class JobDescriptionProcessor:
         self.openai_handler = openai_handler
         self.logger = logger
 
-    def process_job_descriptions(self, df_jobs:pd.DataFrame):
+    def process_job_descriptions(self, df_jobs: pd.DataFrame):
         """
         Process job descriptions using the OpenAI API and add parsed fields to DataFrame.
 
@@ -27,18 +29,18 @@ class JobDescriptionProcessor:
         self.logger.log.info(f"Processing {len(df_jobs)} job descriptions using OpenAI API.")
 
         for index, row in df_jobs.iterrows():
-            description = row['Description']
-            
+            description = row["Description"]
+
             # Create messages and generate a completion using the OpenAI handler
             messages = self.openai_handler.create_messages(description)
             response = self.openai_handler.generate_chat_completion(messages)
-            
-            # Add the parsed JSON fields into the DataFrame as new columns
-            df_jobs.at[index, 'ShortDescription'] = response.get('Description', 'N/A')
-            df_jobs.at[index, 'TechStack'] = ', '.join(response.get('TechStack', []))
-            df_jobs.at[index, 'YoE'] = response.get('YoE', 'N/A')
-            df_jobs.at[index, 'MinLevelStudies'] = response.get('MinLevelStudies', 'N/A')
-            df_jobs.at[index, 'English'] = response.get('English', 'N/A')
 
-        self.logger.log.info(f"Finished processing job descriptions.")
+            # Add the parsed JSON fields into the DataFrame as new columns
+            df_jobs.at[index, "ShortDescription"] = response.get("Description", "N/A")
+            df_jobs.at[index, "TechStack"] = ", ".join(response.get("TechStack", []))
+            df_jobs.at[index, "YoE"] = response.get("YoE", "N/A")
+            df_jobs.at[index, "MinLevelStudies"] = response.get("MinLevelStudies", "N/A")
+            df_jobs.at[index, "English"] = response.get("English", "N/A")
+
+        self.logger.log.info("Finished processing job descriptions.")
         return df_jobs

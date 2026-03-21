@@ -8,7 +8,9 @@ class JobScraperAdvancedConfig:
         SKILLS_CATEGORIES (dict): A dictionary categorizing skills relevant to job postings.
     """
 
-    def __init__(self, LOCATION_MAPPING: dict = None, KEYWORDS: list = None, SKILLS_CATEGORIES: dict = None):
+    def __init__(
+        self, LOCATION_MAPPING: dict = None, KEYWORDS: list = None, SKILLS_CATEGORIES: dict = None
+    ):
         """
         Initializes the JobScraperAdvancedConfig with specific settings.
 
@@ -32,5 +34,7 @@ class JobScraperAdvancedConfig:
         Returns:
             str: A string detailing the configuration settings.
         """
-        return (f"JobScraperAdvancedConfig(LOCATION_MAPPING={self.LOCATION_MAPPING}, "
-                f"KEYWORDS={self.KEYWORDS}, SKILLS_CATEGORIES={self.SKILLS_CATEGORIES})")
+        return (
+            f"JobScraperAdvancedConfig(LOCATION_MAPPING={self.LOCATION_MAPPING}, "
+            f"KEYWORDS={self.KEYWORDS}, SKILLS_CATEGORIES={self.SKILLS_CATEGORIES})"
+        )

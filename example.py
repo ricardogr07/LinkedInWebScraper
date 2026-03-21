@@ -1,16 +1,12 @@
-from LinkedInWebScraper import LinkedInJobScraper, JobScraperConfig, Logger
+from LinkedInWebScraper import JobScraperConfig, LinkedInJobScraper, Logger
 
-logger = Logger('example.log')
+logger = Logger("example.log")
 
 # Define scraper configuration
-config = JobScraperConfig(
-    position="Data Analyst",
-    location="San Francisco",
-    remote="REMOTE"
-)
+config = JobScraperConfig(position="Data Analyst", location="San Francisco", remote="REMOTE")
 
 # Initialize the scraper
-scraper = LinkedInJobScraper(logger,config)
+scraper = LinkedInJobScraper(logger, config)
 
 # Scrape job data
 job_data = scraper.run()
