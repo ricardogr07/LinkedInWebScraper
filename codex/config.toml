@@ -1,0 +1,135 @@
+[project]
+name = "LinkedInWebScraper"
+shell = "powershell"
+platform = "windows"
+python_floor = "3.11"
+docs_root = "docs/codex"
+
+[rules]
+commit_after_risky_change = true
+require_example_smoke = true
+require_main_smoke = true
+prefer_primary_sources = true
+no_destructive_git = true
+no_secrets_in_repo = true
+
+[commands.test]
+command = "python -m pytest -q"
+purpose = "Run the default offline test suite."
+status = "ready"
+
+[commands.lint]
+command = "python -m ruff check ."
+purpose = "Run repository lint checks."
+status = "ready"
+
+[commands.format]
+command = "python -m ruff format ."
+purpose = "Apply repository formatting rules."
+status = "ready"
+
+[commands.type_bootstrap]
+command = "python -m pyrefly check src/Utils/file_manager.py src/Utils/logger.py"
+purpose = "Run the currently enabled bootstrap type-check seam before wider type coverage lands."
+status = "bootstrap"
+
+[commands.docs]
+command = "python -m mkdocs build --strict"
+purpose = "Build internal documentation and fail on nav or markdown issues."
+status = "ready"
+
+[commands.build]
+command = "python -m build --no-isolation"
+purpose = "Build the sdist and wheel from the current working tree."
+status = "ready"
+
+[commands.smoke_examples]
+command = "python -m pytest -q tests/test_example_smoke.py tests/test_main_smoke.py"
+purpose = "Run the example.py and main.py orchestration smoke checks."
+status = "ready"
+
+[commands.tox_all]
+command = "python -m tox"
+purpose = "Run the tox environment matrix with missing interpreters skipped."
+status = "ready"
+
+[integrations.openai_docs]
+kind = "mcp"
+status = "recommended"
+availability = "recommended_later"
+purpose = "Official OpenAI documentation lookup for SDK, API, and migration work."
+add_command = "codex mcp add openaiDeveloperDocs --url https://developers.openai.com/mcp"
+reference = "https://platform.openai.com/docs/docs-mcp"
+session_visible = false
+
+[integrations.github_cli]
+kind = "command"
+status = "installed_needs_auth"
+availability = "blocked_misconfigured"
+purpose = "Local GitHub operations such as PR inspection, issue lookup, and workflow checks."
+check_command = "gh auth status"
+reference = "https://cli.github.com/"
+installed = true
+
+[integrations.github_mcp]
+kind = "mcp"
+status = "recommended_optional"
+availability = "recommended_later"
+purpose = "Structured GitHub repository context and operations through an MCP server."
+prerequisites = ["valid GitHub token", "remote server or Docker-based setup"]
+references = [
+  "https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/use-the-github-mcp-server",
+  "https://github.com/github/github-mcp-server",
+]
+session_visible = false
+
+[subagents.tests_safety]
+purpose = "Own smoke tests, regression fixtures, and validation harness updates."
+write_scope = "tests/, docs/development/"
+use_when = "Adding or tightening guardrails around risky refactors."
+
+[subagents.docs_devx]
+purpose = "Own internal docs, developer guidance, and Codex enablement content."
+write_scope = "docs/, mkdocs.yml, codex/"
+use_when = "Updating docs, repo workflow guidance, or enablement material."
+
+[subagents.packaging_release]
+purpose = "Own packaging metadata, build config, release workflow docs, and wheel validation."
+write_scope = "pyproject.toml, tox.toml, setup.py, release docs"
+use_when = "Changing packaging, build, publish, or environment bootstrap behavior."
+
+[subagents.compat_shims]
+purpose = "Own compatibility wrappers, deprecations, and import migration support."
+write_scope = "legacy package shims and public import surfaces"
+use_when = "Migrating namespaces while keeping current users working."
+
+[subagents.storage_migrations]
+purpose = "Own persistence adapters, migrations, and state-export pathways."
+write_scope = "storage modules, migrations, state/export docs"
+use_when = "Adding SQL persistence, migrations, or export contracts."
+
+[skills.current.openai_docs]
+status = "observed_builtin"
+purpose = "Use official OpenAI documentation as the primary source for OpenAI-related work."
+
+[skills.current.skill_creator]
+status = "observed_builtin"
+purpose = "Design or revise reusable Codex skills."
+
+[skills.current.skill_installer]
+status = "observed_builtin"
+purpose = "Install supported skills into the local Codex environment."
+
+[skills.current.neon_pairwise_review]
+status = "observed_builtin"
+purpose = "Run governed pairwise review workflows when that review format is needed."
+
+[skills.future.linkedin_modernization_maintainer]
+status = "planned"
+purpose = "Guide phased modernization work for this repo with compatibility, validation, and safe refactor sequencing."
+target_responsibilities = [
+  "phase-aware migration steps",
+  "compatibility shim guidance",
+  "validation and smoke-test sequencing",
+  "safe subagent work partitioning",
+]

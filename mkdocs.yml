@@ -7,8 +7,13 @@ docs_dir: docs
 theme:
   name: material
 nav:
-  - Home: development/current-public-surface.md
   - Development:
       - Current public surface: development/current-public-surface.md
+      - Codex:
+          - Overview: codex/index.md
+          - Subagents: codex/subagents.md
+          - Skills: codex/skills.md
+          - Tools and commands: codex/tools-and-commands.md
+          - Integrations: codex/integrations.md
 plugins:
   - search
