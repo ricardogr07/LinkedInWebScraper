@@ -23,7 +23,9 @@ def test_required_workflow_files_exist() -> None:
         RUNTIME_DIR / "daily.toml",
     }
 
-    missing = sorted(str(path.relative_to(REPO_ROOT)) for path in expected_files if not path.exists())
+    missing = sorted(
+        str(path.relative_to(REPO_ROOT)) for path in expected_files if not path.exists()
+    )
     assert not missing, f"Missing workflow assets: {missing}"
 
 

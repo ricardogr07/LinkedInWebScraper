@@ -65,9 +65,7 @@ class HttpRequestPolicy:
             self,
             timeout=self.timeout if timeout is None else timeout,
             max_retries=self.max_retries if max_retries is None else max_retries,
-            initial_backoff=(
-                self.initial_backoff if initial_backoff is None else initial_backoff
-            ),
+            initial_backoff=(self.initial_backoff if initial_backoff is None else initial_backoff),
             max_backoff=self.max_backoff if max_backoff is None else max_backoff,
             retryable_status_codes=(
                 self.retryable_status_codes

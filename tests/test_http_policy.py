@@ -35,7 +35,9 @@ def test_fetch_until_success_uses_session_and_policy(mock_random_choice):
     session = MagicMock()
     response = MagicMock(status_code=200)
     session.get.return_value = response
-    policy = HttpRequestPolicy(timeout=7, max_retries=2, user_agent_headers=({"User-Agent": "Mozilla/5.0"},))
+    policy = HttpRequestPolicy(
+        timeout=7, max_retries=2, user_agent_headers=({"User-Agent": "Mozilla/5.0"},)
+    )
 
     result = fetch_until_success(
         "http://example.com",

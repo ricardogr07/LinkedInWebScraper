@@ -38,7 +38,9 @@ class FileManager:
         append: bool = True,
     ) -> None:
         """Save or append jobs to a CSV file."""
-        target_file = resolve_jobs_output_path(file_name or self.generate_file_name(), self.output_dir)
+        target_file = resolve_jobs_output_path(
+            file_name or self.generate_file_name(), self.output_dir
+        )
 
         if append and os.path.exists(target_file):
             self.append_jobs_to_csv(df, target_file)

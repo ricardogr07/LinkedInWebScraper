@@ -19,7 +19,9 @@ class FakeStorage:
 
     def __init__(self, logger, *, storage_url):
         type(self).init_calls.append({"logger": logger, "storage_url": storage_url})
-        self.engine = SimpleNamespace(dispose=lambda: type(self).init_calls.append({"disposed": True}))
+        self.engine = SimpleNamespace(
+            dispose=lambda: type(self).init_calls.append({"disposed": True})
+        )
 
     def load_run_jobs(self, run_id: str) -> pd.DataFrame:
         type(self).loaded_runs.append(run_id)
@@ -107,7 +109,9 @@ def test_runtime_runner_export_run_writes_csv():
     FakeStorage.init_calls.clear()
     FakeStorage.loaded_runs.clear()
     output_dir = _reset_directory(TEST_TMP_ROOT / "export")
-    runner = RuntimeRunner(logger=logging.getLogger("runtime-runner-export"), storage_cls=FakeStorage)
+    runner = RuntimeRunner(
+        logger=logging.getLogger("runtime-runner-export"), storage_cls=FakeStorage
+    )
     runtime_config = RuntimeConfig()
     runtime_config.storage.url = "sqlite:///runtime.sqlite"
     runtime_config.export.run_id = "run-123"

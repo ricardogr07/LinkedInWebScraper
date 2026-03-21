@@ -150,7 +150,9 @@ class DailyScrapeService:
     ) -> pd.DataFrame:
         """Run the default daily scrape across multiple cities and save a combined CSV."""
         overall_start = perf_counter()
-        self.logger.info("Initializing web scraping for LinkedIn Jobs for the cities %s.", list(cities))
+        self.logger.info(
+            "Initializing web scraping for LinkedIn Jobs for the cities %s.", list(cities)
+        )
 
         city_frames: list[pd.DataFrame] = []
         for city in cities:

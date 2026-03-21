@@ -44,7 +44,9 @@ class JobDataCleaner:
         self.logger.info("Data cleaning process completed.")
         return df
 
-    def process_location_data(self, df: pd.DataFrame, location_mapping: dict[str, str]) -> pd.DataFrame:
+    def process_location_data(
+        self, df: pd.DataFrame, location_mapping: dict[str, str]
+    ) -> pd.DataFrame:
         """Clean the Location column and apply location-specific transformations."""
         self.logger.info("Initial unique locations: %s", df["Location"].nunique())
 
@@ -198,8 +200,7 @@ class JobDataCleaner:
         def split_job_functions(text: str) -> pd.Series:
             job_functions = text.split(", ")
             values = [
-                job_functions[index] if len(job_functions) > index else None
-                for index in range(3)
+                job_functions[index] if len(job_functions) > index else None for index in range(3)
             ]
             return pd.Series(values)
 
@@ -324,13 +325,10 @@ class JobDataCleaner:
             if any(keyword in normalized_level for keyword in ["student", "undergraduate"]):
                 return "Undergraduate Student"
             if any(
-                keyword in normalized_level
-                for keyword in ["bachelor", "bs", "b.sc", "bachelor's"]
+                keyword in normalized_level for keyword in ["bachelor", "bs", "b.sc", "bachelor's"]
             ):
                 return "Bachelor"
-            if any(
-                keyword in normalized_level for keyword in ["master", "ms", "m.sc", "master's"]
-            ):
+            if any(keyword in normalized_level for keyword in ["master", "ms", "m.sc", "master's"]):
                 return "Masters"
             if "phd" in normalized_level:
                 return "PhD"
@@ -364,6 +362,3 @@ class JobDataCleaner:
 
         df_jobs["Other"] = other_flags
         return df_jobs
-
-
-

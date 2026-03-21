@@ -62,7 +62,9 @@ def build_parser() -> argparse.ArgumentParser:
     daily_parser.add_argument("--openai-model")
     daily_openai_group = daily_parser.add_mutually_exclusive_group()
     daily_openai_group.add_argument("--openai-enabled", dest="openai_enabled", action="store_true")
-    daily_openai_group.add_argument("--openai-disabled", dest="openai_enabled", action="store_false")
+    daily_openai_group.add_argument(
+        "--openai-disabled", dest="openai_enabled", action="store_false"
+    )
     daily_parser.set_defaults(openai_enabled=None)
 
     export_parser = subparsers.add_parser(

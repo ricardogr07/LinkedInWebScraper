@@ -43,9 +43,7 @@ class JobTitleClassifier:
         df_jobs["DS_Related"] = df_jobs["Title"].apply(self._classify_single_title)
 
         related_jobs_count = df_jobs["DS_Related"].sum()
-        self.logger.info(
-            "Classified %s jobs as related to %s.", related_jobs_count, self.position
-        )
+        self.logger.info("Classified %s jobs as related to %s.", related_jobs_count, self.position)
 
         df_jobs = df_jobs.loc[df_jobs["DS_Related"] == 1].copy()
         df_jobs.drop(columns=["DS_Related"], inplace=True)

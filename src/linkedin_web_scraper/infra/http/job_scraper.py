@@ -213,11 +213,15 @@ class JobScraper:
                     elif "Industries" in item.get_text():
                         industries = criteria_text
 
-            num_applicants_tag = soup.find("figcaption", class_="num-applicants__caption") or soup.find(
+            num_applicants_tag = soup.find(
+                "figcaption", class_="num-applicants__caption"
+            ) or soup.find(
                 "span",
                 class_="num-applicants__caption topcard__flavor--metadata topcard__flavor--bullet",
             )
-            num_applicants = num_applicants_tag.get_text(strip=True) if num_applicants_tag else "N/A"
+            num_applicants = (
+                num_applicants_tag.get_text(strip=True) if num_applicants_tag else "N/A"
+            )
 
             posted_time = soup.find("span", class_="posted-time-ago__text")
             posted_time = posted_time.get_text(strip=True) if posted_time else "N/A"

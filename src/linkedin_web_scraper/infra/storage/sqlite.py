@@ -117,12 +117,16 @@ class SQLiteScrapeStorage(ScrapeStorage):
                     )
                 )
 
-                enrichment_record = self._build_enrichment_record(run_id=run_id, job_id=job_id, row=row)
+                enrichment_record = self._build_enrichment_record(
+                    run_id=run_id, job_id=job_id, row=row
+                )
                 if enrichment_record is not None:
                     session.add(enrichment_record)
 
         if duplicate_count:
-            self.logger.info("Skipped %s duplicate job snapshots for run %s.", duplicate_count, run_id)
+            self.logger.info(
+                "Skipped %s duplicate job snapshots for run %s.", duplicate_count, run_id
+            )
         self.logger.info("Persisted %s jobs for run %s.", len(records), run_id)
 
     def load_run_jobs(self, run_id: str) -> pd.DataFrame:
@@ -226,10 +230,7 @@ class SQLiteScrapeStorage(ScrapeStorage):
 
     @staticmethod
     def _normalize_row(row: Mapping[object, Any]) -> dict[str, Any]:
-        return {
-            str(key): SQLiteScrapeStorage._normalize_value(value)
-            for key, value in row.items()
-        }
+        return {str(key): SQLiteScrapeStorage._normalize_value(value) for key, value in row.items()}
 
     @staticmethod
     def _normalize_value(value: Any) -> Any:
