@@ -53,6 +53,21 @@ class TestFetchUntilSuccess:
 
     @patch("requests.get")
     @patch("time.sleep", return_value=None)
+    def test_fetch_does_not_retry_non_retryable_status(self, mock_sleep, mock_requests_get, logger):
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_requests_get.return_value = mock_response
+
+        url = "http://example.com"
+        response = fetch_until_success(url, logger=logger, max_retries=3)
+
+        assert mock_requests_get.call_count == 1
+        assert response is None
+        assert mock_sleep.call_count == 0
+        logger.log.debug.assert_any_call("Received status code %s from %s", 404, url)
+
+    @patch("requests.get")
+    @patch("time.sleep", return_value=None)
     def test_fetch_handles_request_exception(self, mock_sleep, mock_requests_get, logger):
         mock_requests_get.side_effect = requests.exceptions.RequestException
 
@@ -60,17 +75,16 @@ class TestFetchUntilSuccess:
         max_retries = 2
         response = fetch_until_success(url, logger=logger, max_retries=max_retries)
 
-        assert mock_requests_get.call_count == max_retries
+        assert mock_requests_get.call_count == 1
         assert response is None
         request_error_calls = [
             call
             for call in logger.log.debug.call_args_list
-            if call.args and call.args[0] == "Request error: %s. Retrying... (Attempt %s/%s)"
+            if call.args and call.args[0] == "Request failed without retry: %s (Attempt %s/%s)"
         ]
         assert request_error_calls
         assert isinstance(request_error_calls[0].args[1], requests.exceptions.RequestException)
         assert request_error_calls[0].args[2:] == (1, max_retries)
-        logger.log.debug.assert_any_call("Max retries reached. Unable to fetch jobs from %s", url)
 
     @patch("requests.get")
     @patch("time.sleep", return_value=None)
@@ -87,5 +101,4 @@ class TestFetchUntilSuccess:
         )
 
         assert mock_requests_get.call_count == max_retries
-        assert [call[0][0] for call in mock_sleep.call_args_list] == [2, 4, 8]
-
+        assert [call[0][0] for call in mock_sleep.call_args_list] == [2, 4]

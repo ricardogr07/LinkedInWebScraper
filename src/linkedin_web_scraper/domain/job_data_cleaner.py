@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
+from linkedin_web_scraper.config.constants import normalize_location_name
 from linkedin_web_scraper.infra.logging import resolve_logger
 
 
@@ -22,8 +23,20 @@ class JobDataCleaner:
             df = self.process_location_data(df, location_mapping)
 
         df = self.process_urls_and_job_ids(df)
+        if df.empty:
+            self.logger.info("No rows remaining after location and URL processing.")
+            return df.reset_index(drop=True)
+
         df = self.filter_valid_job_ids(df)
+        if df.empty:
+            self.logger.info("No rows remaining after JobID validation.")
+            return df.reset_index(drop=True)
+
         df = self.remove_duplicate_job_ids(df)
+        if df.empty:
+            self.logger.info("No rows remaining after duplicate JobID removal.")
+            return df.reset_index(drop=True)
+
         df = self.remove_duplicates_by_columns(df)
 
         self.logger.info("Data cleaning process completed.")
@@ -33,19 +46,24 @@ class JobDataCleaner:
         """Clean the Location column and apply location-specific transformations."""
         self.logger.info("Initial unique locations: %s", df["Location"].nunique())
 
-        df["Location"] = df["Location"].apply(lambda value: value.split(",")[0])
+        normalized_mapping = {
+            normalize_location_name(key): value for key, value in location_mapping.items()
+        }
+        df["Location"] = df["Location"].apply(
+            lambda value: normalize_location_name(value.split(",")[0])
+        )
 
-        unmatched_locations = df[~df["Location"].isin(location_mapping.keys())][
+        unmatched_locations = df[~df["Location"].isin(normalized_mapping.keys())][
             "Location"
         ].unique()
         self.logger.info("Unique 'Other' locations before mapping: %s", unmatched_locations)
 
-        df["Location"] = df["Location"].apply(lambda loc: location_mapping.get(loc, "Other"))
+        df["Location"] = df["Location"].apply(lambda loc: normalized_mapping.get(loc, "Other"))
 
         other_count = df[df["Location"] == "Other"].shape[0]
         self.logger.info("Found %s 'Other' locations. Dropping them.", other_count)
 
-        df = df[df["Location"] != "Other"]
+        df = df[df["Location"] != "Other"].copy()
         df["Location"] = df["Location"].astype("category")
 
         self.logger.info(
@@ -177,7 +195,10 @@ class JobDataCleaner:
 
         def split_job_functions(text: str) -> pd.Series:
             job_functions = text.split(", ")
-            values = [job_functions[index] if len(job_functions) > index else None for index in range(3)]
+            values = [
+                job_functions[index] if len(job_functions) > index else None
+                for index in range(3)
+            ]
             return pd.Series(values)
 
         self.logger.info("Splitting 'JobFunction' into three separate columns.")
@@ -296,9 +317,14 @@ class JobDataCleaner:
             normalized_level = level.lower()
             if any(keyword in normalized_level for keyword in ["student", "undergraduate"]):
                 return "Undergraduate Student"
-            if any(keyword in normalized_level for keyword in ["bachelor", "bs", "b.sc", "bachelor's"]):
+            if any(
+                keyword in normalized_level
+                for keyword in ["bachelor", "bs", "b.sc", "bachelor's"]
+            ):
                 return "Bachelor"
-            if any(keyword in normalized_level for keyword in ["master", "ms", "m.sc", "master's"]):
+            if any(
+                keyword in normalized_level for keyword in ["master", "ms", "m.sc", "master's"]
+            ):
                 return "Masters"
             if "phd" in normalized_level:
                 return "PhD"

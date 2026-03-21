@@ -5,6 +5,7 @@ from linkedin_web_scraper.config.constants import (
     TECH_STACK_CATEGORIES,
     TIME_POSTED_OPTION,
     USER_AGENT_HEADERS,
+    normalize_location_name,
 )
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
@@ -18,6 +19,7 @@ __all__ = [
     "LOCATION_MAPPING",
     "DATA_SCIENCE_KEYWORDS",
     "TECH_STACK_CATEGORIES",
+    "normalize_location_name",
     "JobScraperAdvancedConfig",
     "JobScraperConfig",
     "JobScraperConfigFactory",

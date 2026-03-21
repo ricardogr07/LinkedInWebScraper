@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from linkedin_web_scraper.config.constants import REMOTE_OPTION, TIME_POSTED_OPTION
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
+from linkedin_web_scraper.infra.http.policy import HttpRequestPolicy
 from linkedin_web_scraper.infra.http.utils import fetch_until_success
 from linkedin_web_scraper.infra.logging import Logger, resolve_logger
 
@@ -22,12 +23,15 @@ class JobScraper:
         logger: logging.Logger | Logger | None = None,
         *,
         session: requests.Session | None = None,
-        request_timeout: float = 10,
+        request_timeout: float | None = None,
+        request_policy: HttpRequestPolicy | None = None,
     ):
         self.config = config
         self.logger = resolve_logger(logger, name=__name__)
-        self.session = session
-        self.request_timeout = request_timeout
+        self.session = session or requests.Session()
+        base_policy = request_policy or HttpRequestPolicy()
+        self.request_policy = base_policy.with_overrides(timeout=request_timeout)
+        self.request_timeout = self.request_policy.timeout
         self.jobs: list[dict[str, str]] = []
 
     def scrape_jobs(self) -> pd.DataFrame:
@@ -49,7 +53,7 @@ class JobScraper:
                     target_url,
                     self.logger,
                     session=self.session,
-                    timeout=self.request_timeout,
+                    policy=self.request_policy,
                 )
 
                 if response is None:
@@ -80,7 +84,7 @@ class JobScraper:
                 self.generate_main_url(),
                 self.logger,
                 session=self.session,
-                timeout=self.request_timeout,
+                policy=self.request_policy,
             )
             if response is None:
                 self.logger.error("Failed to fetch the total number of jobs.")
@@ -171,7 +175,7 @@ class JobScraper:
                 self.get_jobid_information(jobid),
                 self.logger,
                 session=self.session,
-                timeout=self.request_timeout,
+                policy=self.request_policy,
             )
             if response is None:
                 continue

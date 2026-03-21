@@ -49,3 +49,31 @@ def test_legacy_submodules_reexport_canonical_symbols():
     assert any("LinkedInWebScraper.job_scraper_config" in str(warning.message) for warning in caught)
     assert any("Utils.file_manager" in str(warning.message) for warning in caught)
     assert any("OpenAIHandler.openai_handler" in str(warning.message) for warning in caught)
+
+
+def test_constant_exports_stay_aligned_across_namespaces():
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", DeprecationWarning)
+        legacy_constants = import_fresh("Utils.constants")
+
+    from linkedin_web_scraper.config import (
+        LOCATION_MAPPING as config_location_mapping,
+    )
+    from linkedin_web_scraper.config import (
+        USER_AGENT_HEADERS as config_user_agent_headers,
+    )
+    from linkedin_web_scraper.config.constants import (
+        LOCATION_MAPPING as constants_location_mapping,
+    )
+    from linkedin_web_scraper.config.constants import (
+        USER_AGENT_HEADERS as constants_user_agent_headers,
+    )
+
+    assert legacy_constants.LOCATION_MAPPING == config_location_mapping == constants_location_mapping
+    assert (
+        legacy_constants.USER_AGENT_HEADERS
+        == config_user_agent_headers
+        == constants_user_agent_headers
+    )
+    assert not hasattr(legacy_constants, "normalize_location_name")
+    assert any("Utils.constants" in str(warning.message) for warning in caught)
