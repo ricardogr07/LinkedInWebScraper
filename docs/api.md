@@ -1,4 +1,4 @@
-# API Reference
+﻿# API Reference
 
 ## Application
 
@@ -7,6 +7,8 @@
 ::: linkedin_web_scraper.application.daily_scrape_service
 
 ::: linkedin_web_scraper.application.storage
+
+::: linkedin_web_scraper.application.runtime_runner
 
 ## Configuration
 
@@ -19,6 +21,8 @@
 ::: linkedin_web_scraper.config.openai
 
 ::: linkedin_web_scraper.config.storage
+
+::: linkedin_web_scraper.config.runtime
 
 ::: linkedin_web_scraper.config.options
 

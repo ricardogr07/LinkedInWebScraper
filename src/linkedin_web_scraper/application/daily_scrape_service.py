@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -9,6 +9,7 @@ import pandas as pd
 from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScraper
 from linkedin_web_scraper.application.storage import ScrapeRunContext, ScrapeStorage
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
+from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 from linkedin_web_scraper.infra.logging import resolve_logger
 from linkedin_web_scraper.infra.paths import resolve_jobs_output_path
@@ -60,6 +61,7 @@ class DailyScrapeService:
         position: str = "Data Scientist",
         location: str = "Monterrey",
         openai_enabled: bool = False,
+        openai_model: str = DEFAULT_OPENAI_MODEL,
         time_posted: str | TimePosted = TimePosted.DAY,
         remote_types: Sequence[str | RemoteType] = DEFAULT_REMOTE_TYPES,
         file_name: str | None = None,
@@ -73,6 +75,7 @@ class DailyScrapeService:
             position=position,
             location=location,
             openai_enabled=openai_enabled,
+            openai_model=openai_model,
             time_posted=time_posted,
             remote=RemoteType.ALL,
         )
@@ -92,6 +95,7 @@ class DailyScrapeService:
             time_posted=str(time_posted),
             remote_types=tuple(str(remote) for remote in remote_types),
             output_path=target_output_path,
+            metadata={"openai_model": openai_model},
         )
         run_id = self.storage.begin_run(run_context)
 
@@ -102,6 +106,7 @@ class DailyScrapeService:
                     position=position,
                     location=location,
                     openai_enabled=openai_enabled,
+                    openai_model=openai_model,
                     time_posted=time_posted,
                     remote=remote,
                 )
@@ -138,6 +143,7 @@ class DailyScrapeService:
         cities: Sequence[str] = DEFAULT_DAILY_CITIES,
         position: str = "Data Scientist",
         openai_enabled: bool = False,
+        openai_model: str = DEFAULT_OPENAI_MODEL,
         time_posted: str | TimePosted = TimePosted.DAY,
         output_dir: str | Path | None = None,
         combined_file_name: str | None = None,
@@ -155,6 +161,7 @@ class DailyScrapeService:
                     position=position,
                     location=city,
                     openai_enabled=openai_enabled,
+                    openai_model=openai_model,
                     time_posted=time_posted,
                     file_name=city_file_name,
                     output_dir=output_dir,
@@ -173,6 +180,7 @@ class DailyScrapeService:
             position=position,
             location="Mexico",
             openai_enabled=openai_enabled,
+            openai_model=openai_model,
             time_posted=time_posted,
             remote=RemoteType.ALL,
         )
@@ -191,4 +199,3 @@ class DailyScrapeService:
             "Web scraping for all cities completed in %.2f seconds.", perf_counter() - overall_start
         )
         return combined_jobs
-

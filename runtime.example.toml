@@ -1,0 +1,35 @@
+# Example runtime configuration for CLI, containers, and scheduled runs.
+# Keep OPENAI_API_KEY in the environment, never in this file.
+
+[logging]
+level = "INFO"
+file_name = "main.log"
+
+[storage]
+file_name = "linkedin_jobs.sqlite"
+state_dir = "artifacts/state"
+
+[scrape.once]
+position = "Data Scientist"
+location = "Monterrey"
+openai_enabled = false
+openai_model = "gpt-4o-mini"
+time_posted = "DAY"
+remote_types = ["REMOTE", "HYBRID", "ON-SITE"]
+file_name = "LinkedIn_Jobs_Data_Scientist_Monterrey.csv"
+output_dir = "artifacts/jobs"
+append = true
+
+[scrape.daily]
+cities = ["Monterrey", "Guadalajara", "Mexico City"]
+position = "Data Scientist"
+openai_enabled = false
+openai_model = "gpt-4o-mini"
+time_posted = "DAY"
+output_dir = "artifacts/jobs"
+combined_file_name = "LinkedIn_Jobs_Data_Scientist_Mexico.csv"
+
+[export]
+run_id = ""
+file_name = "linkedin_jobs_export.csv"
+output_dir = "artifacts/jobs"

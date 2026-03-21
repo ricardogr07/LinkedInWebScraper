@@ -1,4 +1,4 @@
-site_name: LinkedInWebScraper
+﻿site_name: LinkedInWebScraper
 site_description: A production-minded LinkedIn jobs scraping library.
 site_url: https://github.com/ricardogr07/LinkedInWebScraper
 repo_url: https://github.com/ricardogr07/LinkedInWebScraper
@@ -10,6 +10,7 @@ nav:
   - Overview: index.md
   - Getting Started: getting-started.md
   - Configuration: configuration.md
+  - Runtime and Deployment: runtime.md
   - API Reference: api.md
   - Internal:
       - Validation: development/validation.md

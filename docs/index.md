@@ -1,38 +1,39 @@
-# LinkedInWebScraper
+﻿# LinkedInWebScraper
 
-LinkedInWebScraper provides a reusable workflow for scraping LinkedIn job listings, normalizing the output, persisting run history, and exporting datasets that can be rerun safely over time.
+LinkedInWebScraper provides a reusable workflow for scraping LinkedIn job listings, normalizing the results, persisting run history, and exporting datasets that can be rerun safely over time.
 
 ## What It Does
 
 - Scrapes LinkedIn search result pages and job detail pages
-- Cleans and normalizes job metadata such as locations, job IDs, and job-detail fields
-- Supports daily multi-city export workflows through `DailyScrapeService`
+- Cleans and normalizes job metadata such as locations, job IDs, and extracted fields
+- Supports single scrapes and daily multi-city runs
+- Persists run history to SQLite through a clean application storage port
 - Writes managed artifacts under `artifacts/jobs`, `artifacts/logs`, and `artifacts/state`
-- Persists run history to SQLite through a clean application-layer storage port
-- Keeps OpenAI enrichment isolated behind an optional runtime path and package extra
+- Keeps OpenAI enrichment optional and isolated behind an extra plus runtime toggle
 
-## Architecture
+## Runtime Surfaces
 
-The canonical package is `linkedin_web_scraper` and is organized into:
+The project now has two supported runtime modes:
 
-- `config` for typed runtime inputs and constants
-- `application` for orchestration services and storage contracts
-- `domain` for cleaning and classification logic
-- `infra` for HTTP, logging, path resolution, optional OpenAI, SQLite storage, and CSV helpers
-- `interfaces` for CLI entrypoints
+- Programmatic library usage through `JobScraperConfig`, `LinkedInJobScraper`, and `DailyScrapeService`
+- TOML-driven CLI usage through `linkedin-webscraper scrape once`, `scrape daily`, and `export`
 
-Legacy namespaces such as `LinkedInWebScraper`, `Utils`, and `OpenAIHandler` still work through compatibility wrappers, but new code should import from `linkedin_web_scraper`.
+The root scripts remain compatibility wrappers:
 
-## Runtime Defaults
+- `python main.py` -> default daily run
+- `python process_ds_jobs.py` -> default single-location run
+
+## Defaults
 
 - Bare log filenames resolve under `artifacts/logs`
-- Bare CSV export filenames resolve under `artifacts/jobs`
-- Bare SQLite/state filenames resolve under `artifacts/state`
-- `DailyScrapeService` persists runs to `artifacts/state/linkedin_jobs.sqlite` by default
-- OpenAI enrichment is optional and requires the `openai` extra plus `OPENAI_API_KEY`
+- Bare CSV filenames resolve under `artifacts/jobs`
+- Bare SQLite filenames resolve under `artifacts/state`
+- Default managed DB path is `artifacts/state/linkedin_jobs.sqlite`
+- OpenAI enrichment requires the optional extra and `OPENAI_API_KEY`
 
 ## Next Steps
 
-- Follow [Getting Started](getting-started.md) for a local scrape flow
-- Use [Configuration](configuration.md) to understand runtime options, storage defaults, and artifact paths
-- See [API Reference](api.md) for generated reference documentation
+- Follow [Getting Started](getting-started.md) for library and CLI usage
+- Use [Configuration](configuration.md) for config models, runtime TOML, and env overrides
+- Use [Runtime and Deployment](runtime.md) for CLI, dry-run, and Docker workflows
+- See [API Reference](api.md) for generated module documentation

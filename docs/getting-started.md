@@ -1,14 +1,14 @@
-# Getting Started
+﻿# Getting Started
 
 ## Installation
 
-Install the published package:
+Base install:
 
 ```bash
 pip install LinkedInWebScraper
 ```
 
-Install the optional OpenAI enrichment extra when you need description post-processing:
+Install the optional OpenAI extra when you need enrichment:
 
 ```bash
 pip install LinkedInWebScraper[openai]
@@ -20,9 +20,9 @@ For local development:
 pip install -e .[dev]
 ```
 
-## Scrape One Search
+## Programmatic Scrape
 
-Use the canonical package imports for new code:
+Use canonical imports for new code:
 
 ```python
 from linkedin_web_scraper import (
@@ -42,8 +42,6 @@ config = JobScraperConfig(
 jobs = LinkedInJobScraper(logger=logger, config=config).run()
 print(jobs.head())
 ```
-
-Bare log names resolve to `artifacts/logs/`. Bare CSV output names resolve to `artifacts/jobs/`.
 
 ## Enable OpenAI Enrichment
 
@@ -66,63 +64,63 @@ $env:OPENAI_API_KEY = "sk-..."
 python example_openai.py
 ```
 
-To persist the key for your Windows user account without putting it in the repo:
+To persist the key for your user account on Windows without committing it:
 
 ```powershell
 [Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-...", "User")
 ```
 
-If enrichment setup fails, the scraper returns the base cleaned dataset instead of aborting the full run.
+## CLI Quickstart
 
-## Persist Daily Runs To SQLite
+Use the runtime template as a starting point:
 
-`DailyScrapeService` now persists run state to SQLite by default.
-
-- managed database path: `artifacts/state/linkedin_jobs.sqlite`
-- managed CSV paths: `artifacts/jobs/`
-- managed log paths: `artifacts/logs/`
-
-To use a custom local SQLite file:
-
-```python
-from linkedin_web_scraper import DailyScrapeService, SQLiteScrapeStorage, build_sqlite_storage_url
-
-service = DailyScrapeService(
-    storage=SQLiteScrapeStorage(
-        storage_url=build_sqlite_storage_url("jobs-dev.sqlite"),
-    )
-)
+```bash
+copy runtime.example.toml runtime.toml
 ```
 
-## Run The Example Scripts
+Preview a once scrape without hitting LinkedIn:
 
-These compatibility-oriented scripts remain useful during the modernization:
+```bash
+linkedin-webscraper scrape once --config runtime.toml --dry-run
+```
+
+Run the daily workflow:
+
+```bash
+linkedin-webscraper scrape daily --config runtime.toml
+```
+
+Export a persisted run from SQLite:
+
+```bash
+linkedin-webscraper export --config runtime.toml --run-id <run-id>
+```
+
+## Compatibility Scripts
+
+The modernization keeps the old script surfaces working:
 
 ```bash
 python example.py
 python example_advanced_config.py
 python example_openai.py
-```
-
-## Run The Daily Workflow
-
-The current scheduled-job entrypoint is still `main.py`:
-
-```bash
 python main.py
+python process_ds_jobs.py
 ```
 
-That workflow uses `DailyScrapeService` under the hood and writes city-level plus combined CSV outputs to `artifacts/jobs/` and persistent state to `artifacts/state/linkedin_jobs.sqlite` by default.
+`main.py` defaults to the daily workflow. `process_ds_jobs.py` defaults to the single-location once workflow.
 
-## Migration Guidance
+## Managed Artifacts
 
-- Prefer imports from `linkedin_web_scraper` in new code.
-- Keep existing legacy imports only when you are explicitly validating backward compatibility.
-- Treat `example.py`, `example_openai.py`, and `main.py` as compatibility-sensitive smoke paths during refactors.
+By default:
+
+- logs go to `artifacts/logs`
+- CSV exports go to `artifacts/jobs`
+- SQLite state goes to `artifacts/state/linkedin_jobs.sqlite`
 
 ## Validate Local Changes
 
-The default local quality gates are:
+Default local checks:
 
 ```bash
 python -m pytest -q
@@ -130,8 +128,8 @@ python -m ruff check .
 python -m mkdocs build --strict
 ```
 
-For the currently enforced type-check seam, run:
+Current enforced Pyrefly seam:
 
 ```bash
-python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/storage.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/application/storage.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py src/linkedin_web_scraper/infra/storage/models.py src/linkedin_web_scraper/infra/storage/sqlite.py
+python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/storage.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/config/runtime.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/application/storage.py src/linkedin_web_scraper/application/runtime_runner.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py src/linkedin_web_scraper/infra/storage/models.py src/linkedin_web_scraper/infra/storage/sqlite.py
 ```

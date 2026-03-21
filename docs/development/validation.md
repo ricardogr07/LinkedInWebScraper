@@ -1,4 +1,4 @@
-# Validation
+﻿# Validation
 
 This page captures the long-term validation gates for risky changes in this repository.
 
@@ -10,15 +10,23 @@ Run these checks after changes that can affect imports, runtime behavior, packag
 - `python -m ruff check .`
 - `python -m mkdocs build --strict`
 - the current Pyrefly seam from `codex/config.toml`
-- smoke tests for `example.py` and `main.py`
+- smoke checks for `example.py`, `main.py`, and `process_ds_jobs.py`
 
 ## Smoke Expectations
 
 The baseline compatibility smoke checks are:
 
 - `example.py` still orchestrates a scrape successfully with mocked dependencies
-- `main.py` still orchestrates the daily run successfully with mocked dependencies
-- generated outputs only appear in expected managed locations unless an explicit path is passed
+- `main.py` still defaults to the canonical daily CLI path
+- `process_ds_jobs.py` still defaults to the canonical once CLI path
+- managed outputs only appear in expected artifact/state locations unless an explicit path is passed
+
+## When Runtime Or CLI Changes
+
+- run the CLI/runtime config tests first
+- verify `--dry-run` still resolves plans without network access
+- verify `main.py` and `process_ds_jobs.py` still route through the canonical CLI surface
+- verify TOML runtime loading and env overrides keep the documented precedence order
 
 ## When Packaging Changes
 
@@ -46,6 +54,12 @@ The baseline compatibility smoke checks are:
 - verify persistence works with the configured SQLite path
 - verify export artifacts are still generated from persisted state
 - verify managed database paths resolve under `artifacts/state/` by default
+
+## When Container Or Deployment Assets Change
+
+- validate the runtime config template and Docker docs together
+- keep container validation indirect in the default offline suite
+- verify mounted `artifacts/` and runtime config paths match the documented contract
 
 ## Commit Rule
 

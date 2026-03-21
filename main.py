@@ -1,14 +1,14 @@
-import time
+﻿from __future__ import annotations
 
-from linkedin_web_scraper.application.daily_scrape_service import DailyScrapeService
-from Utils.logger import Logger
+import sys
+
+from linkedin_web_scraper.interfaces.cli.main import main as cli_main
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the legacy root daily entrypoint via the package CLI."""
+    return cli_main(list(argv) if argv is not None else ["scrape", "daily"])
+
 
 if __name__ == "__main__":
-    overall_start_time = time.time()
-
-    logger = Logger("main.log")
-    DailyScrapeService(logger=logger).run_daily()
-
-    overall_end_time = time.time()
-    overall_duration = overall_end_time - overall_start_time
-    logger.log.info(f"main.py wrapper completed in {overall_duration:.2f} seconds.")
+    raise SystemExit(main(sys.argv[1:] or ["scrape", "daily"]))

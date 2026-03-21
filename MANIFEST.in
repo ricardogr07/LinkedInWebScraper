@@ -1,2 +1,5 @@
 include README.md
 include LICENSE
+include runtime.example.toml
+include Dockerfile
+include .dockerignore
