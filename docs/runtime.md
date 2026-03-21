@@ -1,4 +1,4 @@
-﻿# Runtime and Deployment
+# Runtime and Deployment
 
 ## CLI Commands
 
@@ -56,6 +56,18 @@ linkedin-webscraper scrape daily --config runtime.toml
 
 You can also point to a config path through `LINKEDIN_WEB_SCRAPER_CONFIG`.
 
+## GitHub Actions Runtime
+
+The scheduled automation uses `.github/runtime/daily.toml`.
+
+That workflow-specific config keeps three contracts stable:
+
+- SQLite state stays under `artifacts/state`
+- CSV exports stay under `artifacts/jobs`
+- logs stay under `artifacts/logs`
+
+The workflow then copies persisted state and dated exports onto the `data` branch.
+
 ## Docker
 
 The repo includes a slim `Dockerfile` and `.dockerignore`.
@@ -92,4 +104,3 @@ Default managed locations inside the container and local runtime are the same:
 - `artifacts/state`
 
 That keeps local runs, containers, and future CI schedulers on the same path contract.
-

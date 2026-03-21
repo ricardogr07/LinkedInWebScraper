@@ -1,6 +1,6 @@
-﻿site_name: LinkedInWebScraper
+site_name: LinkedInWebScraper
 site_description: A production-minded LinkedIn jobs scraping library.
-site_url: https://github.com/ricardogr07/LinkedInWebScraper
+site_url: https://ricardogr07.github.io/LinkedInWebScraper/
 repo_url: https://github.com/ricardogr07/LinkedInWebScraper
 edit_uri: edit/main/docs/
 docs_dir: docs
@@ -14,6 +14,7 @@ nav:
   - API Reference: api.md
   - Internal:
       - Validation: development/validation.md
+      - Release and Automation: development/release-and-automation.md
       - Codex:
           - Overview: codex/index.md
           - Subagents: codex/subagents.md

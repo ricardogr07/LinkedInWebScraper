@@ -1,4 +1,4 @@
-﻿# LinkedInWebScraper
+# LinkedInWebScraper
 
 LinkedInWebScraper is a production-minded Python library and scheduled job runner for collecting LinkedIn job listings, normalizing the data, persisting run history, and exporting reusable datasets.
 
@@ -159,6 +159,17 @@ docker run --rm \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
   linkedin-webscraper:openai scrape daily
 ```
+
+## CI/CD And Automation
+
+The repository now includes four operational workflows under `.github/workflows/`:
+
+- `ci.yml` runs the tox matrix on pushes and pull requests
+- `docs.yml` builds and deploys MkDocs to GitHub Pages from `main`
+- `release.yml` builds distributions and publishes them through trusted publishing to TestPyPI and PyPI
+- `daily-scrape.yml` runs the scheduled daily scrape, stores SQLite state on the `data` branch, uploads artifacts, and raises an issue on automation failures
+
+The scheduled workflow uses `.github/runtime/daily.toml` and currently runs at `12:30 UTC` every day.
 
 ## Compatibility Notes
 

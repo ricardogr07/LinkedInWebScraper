@@ -1,0 +1,230 @@
+name: Daily Scrape
+
+on:
+  schedule:
+    - cron: "30 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: daily-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    name: Run daily scrape
+    runs-on: ubuntu-latest
+    env:
+      LINKEDIN_WEB_SCRAPER_CONFIG: .github/runtime/daily.toml
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[openai]
+
+      - name: Attach data branch worktree
+        shell: bash
+        run: |
+          mkdir -p .tmp
+          if git ls-remote --exit-code --heads origin data; then
+            git fetch origin data:data
+            git worktree add .tmp/data-branch data
+          else
+            git worktree add --orphan .tmp/data-branch data
+          fi
+
+      - name: Restore persisted state
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          for directory in (Path("artifacts/state"), Path("artifacts/jobs"), Path("artifacts/logs")):
+              directory.mkdir(parents=True, exist_ok=True)
+
+          source = Path(".tmp/data-branch/state")
+          target = Path("artifacts/state")
+          if not source.exists():
+              raise SystemExit(0)
+
+          for item in source.iterdir():
+              destination = target / item.name
+              if item.is_dir():
+                  shutil.copytree(item, destination, dirs_exist_ok=True)
+              else:
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(item, destination)
+          PY
+
+      - name: Initialize SQLite schema
+        run: |
+          python - <<'PY'
+          from linkedin_web_scraper.application.runtime_runner import RuntimeRunner
+          from linkedin_web_scraper.config.runtime import load_runtime_config
+          from linkedin_web_scraper.infra.storage.sqlite import SQLiteScrapeStorage
+
+          config = load_runtime_config(".github/runtime/daily.toml")
+          runner = RuntimeRunner()
+          storage = SQLiteScrapeStorage(storage_url=runner.build_storage_url(config))
+          storage.engine.dispose()
+          PY
+
+      - name: Dry run the scheduled plan
+        run: linkedin-webscraper scrape daily --config .github/runtime/daily.toml --dry-run
+
+      - name: Run daily scrape
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: linkedin-webscraper scrape daily --config .github/runtime/daily.toml
+
+      - name: Sync state and exports into data branch
+        run: |
+          python - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import shutil
+
+          run_date = datetime.now(timezone.utc).date().isoformat()
+          data_root = Path(".tmp/data-branch")
+          state_source = Path("artifacts/state")
+          jobs_source = Path("artifacts/jobs")
+
+          state_target = data_root / "state"
+          latest_target = data_root / "exports" / "latest"
+          dated_target = data_root / "exports" / run_date
+
+          for directory in (state_target, latest_target.parent, dated_target.parent):
+              directory.mkdir(parents=True, exist_ok=True)
+
+          if state_target.exists():
+              shutil.rmtree(state_target)
+          shutil.copytree(state_source, state_target)
+
+          if latest_target.exists():
+              shutil.rmtree(latest_target)
+          if dated_target.exists():
+              shutil.rmtree(dated_target)
+
+          shutil.copytree(jobs_source, latest_target)
+          shutil.copytree(jobs_source, dated_target)
+          PY
+
+      - name: Commit and push automation state
+        working-directory: .tmp/data-branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state exports
+          if git diff --cached --quiet; then
+            echo "No automation state changes to commit."
+            exit 0
+          fi
+          git commit -m "Daily scrape $(date -u +%F)"
+          git push origin HEAD:data
+
+      - name: Upload scrape artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-scrape-${{ github.run_id }}
+          path: |
+            artifacts/jobs
+            artifacts/logs
+            artifacts/state
+          retention-days: 14
+
+      - name: Summarize run
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Daily scrape"
+            echo
+            echo "- Workflow config: .github/runtime/daily.toml"
+            echo "- State branch: data"
+            echo "- Artifact retention: 14 days"
+            echo "- Trigger: ${{ github.event_name }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Close open automation failure issues
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "[automation] Daily scrape failure";
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              creator: "github-actions[bot]",
+            });
+            for (const issue of issues.filter((candidate) => candidate.title === title)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Automation recovered in run ${context.runId}. Closing this issue.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: "closed",
+              });
+            }
+
+      - name: Open or update automation failure issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "[automation] Daily scrape failure";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              "The scheduled daily scrape failed.",
+              "",
+              `- Workflow: ${context.workflow}`,
+              `- Trigger: ${context.eventName}`,
+              `- Commit: ${context.sha}`,
+              `- Run: ${runUrl}`,
+              "",
+              "Inspect the workflow logs, fix the failure, and close this issue once the automation is healthy again.",
+            ].join("\n");
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              creator: "github-actions[bot]",
+            });
+            const existing = issues.find((issue) => issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+            }

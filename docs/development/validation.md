@@ -1,10 +1,10 @@
-﻿# Validation
+# Validation
 
 This page captures the long-term validation gates for risky changes in this repository.
 
 ## Default Validation
 
-Run these checks after changes that can affect imports, runtime behavior, packaging, logging, persistence, or entrypoints:
+Run these checks after changes that can affect imports, runtime behavior, packaging, logging, persistence, entrypoints, or deployment automation:
 
 - `python -m pytest -q`
 - `python -m ruff check .`
@@ -57,9 +57,10 @@ The baseline compatibility smoke checks are:
 
 ## When Container Or Deployment Assets Change
 
-- validate the runtime config template and Docker docs together
+- validate the runtime config template, `.github/runtime/daily.toml`, and deployment docs together
 - keep container validation indirect in the default offline suite
 - verify mounted `artifacts/` and runtime config paths match the documented contract
+- verify workflow files still cover CI, docs publish, release publishing, and the daily scheduled scrape
 
 ## Commit Rule
 
