@@ -1,44 +1,48 @@
 from __future__ import annotations
 
 import logging
-from unittest.mock import MagicMock
+import os
+from io import StringIO
 
+from linkedin_web_scraper.infra.logging import (
+    PACKAGE_LOGGER_NAME,
+    configure_logging,
+    get_logger,
+    resolve_logger,
+)
 from Utils.logger import Logger
 
 
 def setup_function() -> None:
-    logging.shutdown()
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    logger = get_logger(PACKAGE_LOGGER_NAME)
+    for handler in logger.handlers[:]:
+        handler.close()
+        logger.removeHandler(handler)
+    logger.addHandler(logging.NullHandler())
     Logger._instance = None
 
 
-def test_logger_singleton_and_basic_config(monkeypatch):
-    basic_config = MagicMock()
-    get_logger = MagicMock()
-    monkeypatch.setattr(logging, "basicConfig", basic_config)
-    monkeypatch.setattr(logging, "getLogger", get_logger)
-
-    logger1 = Logger("first.log")
+def test_logger_singleton_and_named_logger():
+    logger1 = Logger(os.devnull)
     logger2 = Logger("second.log")
 
     assert logger1 is logger2
-    basic_config.assert_called_once_with(
-        filename="first.log",
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(message)s",
-        force=True,
-    )
-    get_logger.assert_called_once()
+    assert logger1.filename == os.devnull
+    assert logger1.log.name == PACKAGE_LOGGER_NAME
 
 
-def test_logger_exposes_underlying_logger(monkeypatch):
-    basic_config = MagicMock()
-    logger_instance = MagicMock()
-    monkeypatch.setattr(logging, "basicConfig", basic_config)
-    monkeypatch.setattr(logging, "getLogger", MagicMock(return_value=logger_instance))
+def test_configure_logging_writes_to_stream():
+    stream = StringIO()
+    logger = configure_logging(stream=stream, filename=None, force=True)
 
-    logger = Logger("test.log")
-    logger.log.info("hello")
+    logger.info("hello")
 
-    logger_instance.info.assert_called_once_with("hello")
+    assert "hello" in stream.getvalue()
+    assert logger.name == PACKAGE_LOGGER_NAME
+
+
+def test_resolve_logger_prefers_wrapped_log():
+    wrapped_logger = logging.getLogger("wrapped-test")
+    wrapper = type("Wrapper", (), {"log": wrapped_logger})()
+
+    assert resolve_logger(wrapper, name="ignored") is wrapped_logger

@@ -9,6 +9,7 @@ from linkedin_web_scraper.config.constants import (
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
+from linkedin_web_scraper.config.options import RemoteType, TimePosted
 
 __all__ = [
     "TIME_POSTED_OPTION",
@@ -20,4 +21,6 @@ __all__ = [
     "JobScraperAdvancedConfig",
     "JobScraperConfig",
     "JobScraperConfigFactory",
+    "RemoteType",
+    "TimePosted",
 ]

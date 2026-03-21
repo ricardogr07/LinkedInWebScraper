@@ -1,43 +1,46 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
+from linkedin_web_scraper.config.options import RemoteType, TimePosted
 
 
+def _normalize_time_posted(value: str | TimePosted) -> TimePosted:
+    if isinstance(value, TimePosted):
+        return value
+    return TimePosted(value.upper())
+
+
+def _normalize_remote_type(value: str | RemoteType) -> RemoteType:
+    if isinstance(value, RemoteType):
+        return value
+    return RemoteType(value.upper())
+
+
+@dataclass(slots=True)
 class JobScraperConfig:
-    """
-    String representation of the job scraper configuration.
+    """Typed runtime configuration for a single LinkedIn scrape."""
 
-    Args:
-        position (str): The job position to search for.
-        location (str): The location to search for jobs.
-        time_posted (str): The time frame in which the job was posted. Defaults to 'DAY'
-        remote (str, optional): The remote work preference. Defaults to 'ALL'.
-        distance (int, optional): The distance for the job search. Defaults to 10.
+    position: str
+    location: str
+    openai_enabled: bool = False
+    time_posted: TimePosted = TimePosted.DAY
+    remote: RemoteType = RemoteType.ALL
+    distance: int = 10
+    advanced_config: JobScraperAdvancedConfig | None = None
 
-    Returns:
-        str: A formatted string representing the JobScraperConfig object with its attributes.
-    """
+    def __post_init__(self) -> None:
+        self.position = self.position.strip()
+        self.location = self.location.strip()
+        self.time_posted = _normalize_time_posted(self.time_posted)
+        self.remote = _normalize_remote_type(self.remote)
+        self.distance = int(self.distance)
 
-    def __init__(
-        self,
-        position: str,
-        location: str,
-        openai_enabled: bool = False,
-        time_posted: str = "DAY",
-        remote: str = "ALL",
-        distance: int = 10,
-        advanced_config: JobScraperAdvancedConfig = None,
-    ):
-        self.position = position
-        self.location = location
-        self.openai_enabled = openai_enabled
-        self.time_posted = time_posted
-        self.remote = remote
-        self.distance = distance
-        self.advanced_config = advanced_config
-
-    def __str__(self):
-        """String representation of the configuration."""
+    def __str__(self) -> str:
         return (
-            f"JobScraperConfig(position={self.position}, location={self.location}, openai_enabled={self.openai_enabled}"
-            f", time_posted={self.time_posted}, remote={self.remote}, distance={self.distance})"
+            "JobScraperConfig("
+            f"position={self.position}, location={self.location}, "
+            f"openai_enabled={self.openai_enabled}, time_posted={self.time_posted}, "
+            f"remote={self.remote}, distance={self.distance})"
         )
-

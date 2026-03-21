@@ -1,77 +1,99 @@
+from __future__ import annotations
+
+import logging
 import math
 
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 
 from linkedin_web_scraper.config.constants import REMOTE_OPTION, TIME_POSTED_OPTION
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.infra.http.utils import fetch_until_success
-from linkedin_web_scraper.infra.logging import Logger
+from linkedin_web_scraper.infra.logging import Logger, resolve_logger
 
 
 class JobScraper:
-    def __init__(self, config: JobScraperConfig, logger: Logger):
+    """HTTP-facing scraper for LinkedIn job result pages and detail pages."""
+
+    def __init__(
+        self,
+        config: JobScraperConfig,
+        logger: logging.Logger | Logger | None = None,
+        *,
+        session: requests.Session | None = None,
+        request_timeout: float = 10,
+    ):
         self.config = config
-        self.logger = logger
-        self.jobs = []
+        self.logger = resolve_logger(logger, name=__name__)
+        self.session = session
+        self.request_timeout = request_timeout
+        self.jobs: list[dict[str, str]] = []
 
     def scrape_jobs(self) -> pd.DataFrame:
         """Scrape jobs from LinkedIn across multiple pages."""
         try:
-            self.logger.log.info(f"Starting job scraping with config: {self.config}")
+            self.logger.info("Starting job scraping with config: %s", self.config)
             total_jobs = self.fetch_total_jobs()
             if total_jobs == 0:
-                self.logger.log.warning("No jobs found for the given search criteria.")
+                self.logger.warning("No jobs found for the given search criteria.")
                 return pd.DataFrame()
 
             total_pages = math.ceil(total_jobs / 10)
-            self.logger.log.info(f"Found {total_jobs} jobs. Scraping {total_pages} pages.")
+            self.logger.info("Found %s jobs. Scraping %s pages.", total_jobs, total_pages)
 
-            for i in range(0, total_jobs, 10):
-                current_page = i // 10 + 1
-                target_url = self.generate_paginated_url(i)
-                response = fetch_until_success(target_url, self.logger)
+            for offset in range(0, total_jobs, 10):
+                current_page = offset // 10 + 1
+                target_url = self.generate_paginated_url(offset)
+                response = fetch_until_success(
+                    target_url,
+                    self.logger,
+                    session=self.session,
+                    timeout=self.request_timeout,
+                )
 
-                if response:
-                    self.logger.log.info(f"Parsing data for page {current_page}/{total_pages}.")
-                    self.parse_job_data(response.content)
-                else:
-                    self.logger.log.error(f"Failed to fetch data for page {current_page}.")
+                if response is None:
+                    self.logger.error("Failed to fetch data for page %s.", current_page)
+                    continue
+
+                self.logger.info("Parsing data for page %s/%s.", current_page, total_pages)
+                self.parse_job_data(response.content)
 
             df = pd.DataFrame(self.jobs)
+            if df.empty:
+                return df
+
             df = df[df["Url"] != "N/A"]
-
-            self.logger.log.info(
-                f"Scraped {df.shape[0]} jobs for the {self.config.remote} positions."
+            self.logger.info(
+                "Scraped %s jobs for the %s positions.", df.shape[0], self.config.remote
             )
-
             return df
 
-        except Exception as e:
-            self.logger.log.error(f"An error occurred during scraping: {e}")
+        except Exception:
+            self.logger.exception("An error occurred during scraping.")
+            return pd.DataFrame()
 
-    def fetch_total_jobs(self):
+    def fetch_total_jobs(self) -> int:
         """Fetch and return the total number of jobs available for the search criteria."""
         try:
-            url = self.generate_main_url()
-            response = fetch_until_success(url, self.logger)
-            if response:
-                soup = BeautifulSoup(response.text, "html.parser")
-                job_count_element = soup.find(
-                    "span", {"class": "results-context-header__job-count"}
-                )
-                total_jobs = (
-                    int(job_count_element.text.strip().replace(",", "")) if job_count_element else 0
-                )
-                return total_jobs
-            else:
-                self.logger.log.error("Failed to fetch the total number of jobs.")
+            response = fetch_until_success(
+                self.generate_main_url(),
+                self.logger,
+                session=self.session,
+                timeout=self.request_timeout,
+            )
+            if response is None:
+                self.logger.error("Failed to fetch the total number of jobs.")
                 return 0
-        except Exception as e:
-            self.logger.log.error(f"Error fetching total jobs: {e}")
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            job_count_element = soup.find("span", {"class": "results-context-header__job-count"})
+            return int(job_count_element.text.strip().replace(",", "")) if job_count_element else 0
+        except Exception:
+            self.logger.exception("Error fetching total jobs.")
             return 0
 
-    def generate_main_url(self):
+    def generate_main_url(self) -> str:
         """Generate the main LinkedIn job search URL with the specified filters."""
         base_url = "https://www.linkedin.com/jobs/search/"
         url_friendly_position = self.config.position.replace(" ", "%20")
@@ -80,19 +102,17 @@ class JobScraper:
         if self.config.distance:
             query_params += f"&distance={self.config.distance}"
         if self.config.time_posted:
-            time_posted_value = TIME_POSTED_OPTION.get(self.config.time_posted, "")
-            query_params += f"&f_TPR={time_posted_value}"
+            query_params += f"&f_TPR={TIME_POSTED_OPTION.get(self.config.time_posted, '')}"
         if self.config.remote:
-            remote_value = REMOTE_OPTION.get(self.config.remote, "")
-            query_params += f"&f_WT={remote_value}"
+            query_params += f"&f_WT={REMOTE_OPTION.get(self.config.remote, '')}"
 
         return base_url + query_params
 
-    def generate_paginated_url(self, start):
+    def generate_paginated_url(self, start: int) -> str:
         """Generate the paginated URL for fetching jobs from LinkedIn."""
         return f"{self.generate_main_url()}&start={start}"
 
-    def parse_job_data(self, html_content):
+    def parse_job_data(self, html_content) -> None:
         """Parse the job data from the HTML content and add it to the jobs list."""
         try:
             soup = BeautifulSoup(html_content, "html.parser")
@@ -103,13 +123,12 @@ class JobScraper:
                     job_info = self.extract_job_info(job)
                     if job_info:
                         self.jobs.append(job_info)
-                except Exception as e:
-                    self.logger.log.error(f"Error processing job listing: {e}")
-                    continue
-        except Exception as e:
-            self.logger.log.error(f"Error parsing job data: {e}")
+                except Exception:
+                    self.logger.exception("Error processing job listing.")
+        except Exception:
+            self.logger.exception("Error parsing job data.")
 
-    def extract_job_info(self, job):
+    def extract_job_info(self, job) -> dict[str, str] | None:
         """Extract job information from a single job listing."""
         try:
             info = job.find("div", class_="base-search-card__info")
@@ -136,30 +155,33 @@ class JobScraper:
                 "Url": joburl,
                 "Remote": self.config.remote,
             }
-        except Exception as e:
-            self.logger.log.error(f"Error extracting job info: {e}")
+        except Exception:
+            self.logger.exception("Error extracting job info.")
             return None
 
-    def fetch_job_details(self, df_jobs: pd.DataFrame):
+    def fetch_job_details(self, df_jobs: pd.DataFrame) -> pd.DataFrame:
         """Fetch detailed job information for each job posting."""
-        df_jobs.reset_index(drop=True, inplace=True)
-        self.logger.log.info(f"Fetching job description for {df_jobs.shape[0]} postings")
+        df_jobs = df_jobs.reset_index(drop=True)
+        self.logger.info("Fetching job description for %s postings", df_jobs.shape[0])
         extracted_data = []
 
-        for i in range(df_jobs.shape[0]):
-            jobid = str(df_jobs["JobID"][i])
-            target_url = self.get_jobid_information(jobid)
-            response = fetch_until_success(target_url, self.logger)
+        for index in range(df_jobs.shape[0]):
+            jobid = str(df_jobs["JobID"][index])
+            response = fetch_until_success(
+                self.get_jobid_information(jobid),
+                self.logger,
+                session=self.session,
+                timeout=self.request_timeout,
+            )
+            if response is None:
+                continue
 
             soup = BeautifulSoup(response.content, "html.parser")
-
-            # Initialize values as 'N/A'
             seniority_level = "N/A"
             employment_type = "N/A"
             job_function = "N/A"
             industries = "N/A"
 
-            # Find job criteria list
             criteria_list = soup.find("ul", class_="description__job-criteria-list")
             if criteria_list:
                 criteria_items = criteria_list.find_all(
@@ -183,16 +205,11 @@ class JobScraper:
                             "span", class_="description__job-criteria-text"
                         ).get_text(strip=True)
 
-            # Extract additional job information
-            num_applicants_tag = soup.find(
-                "figcaption", class_="num-applicants__caption"
-            ) or soup.find(
+            num_applicants_tag = soup.find("figcaption", class_="num-applicants__caption") or soup.find(
                 "span",
                 class_="num-applicants__caption topcard__flavor--metadata topcard__flavor--bullet",
             )
-            num_applicants = (
-                num_applicants_tag.get_text(strip=True) if num_applicants_tag else "N/A"
-            )
+            num_applicants = num_applicants_tag.get_text(strip=True) if num_applicants_tag else "N/A"
 
             posted_time = soup.find("span", class_="posted-time-ago__text")
             posted_time = posted_time.get_text(strip=True) if posted_time else "N/A"
@@ -202,7 +219,6 @@ class JobScraper:
                 description_tag.get_text(separator=" ", strip=True) if description_tag else "N/A"
             )
 
-            # Append the extracted data
             extracted_data.append(
                 {
                     "SeniorityLevel": seniority_level,
@@ -215,15 +231,10 @@ class JobScraper:
                 }
             )
 
-        # Convert the extracted data into a DataFrame
-        self.logger.log.info(f"Finished fetching job descriptions for {len(extracted_data)} jobs.")
+        self.logger.info("Finished fetching job descriptions for %s jobs.", len(extracted_data))
         extracted_df = pd.DataFrame(extracted_data)
-
-        # Merge the job details with the original DataFrame
         return pd.concat([df_jobs, extracted_df], axis=1)
 
-    def get_jobid_information(self, jobid):
+    def get_jobid_information(self, jobid: str) -> str:
         """Generate the URL to fetch detailed job posting data based on job ID."""
-        base_url = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/"
-        return base_url + jobid
-
+        return f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{jobid}"

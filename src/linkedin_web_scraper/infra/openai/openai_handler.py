@@ -1,64 +1,38 @@
+from __future__ import annotations
+
 import json
+import logging
 import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from linkedin_web_scraper.infra.logging import Logger
+from linkedin_web_scraper.infra.logging import Logger, resolve_logger
 
 
 class OpenAIHandler:
-    """
-    A class for handling interactions with OpenAI services.
+    """Handle OpenAI interactions used for job description enrichment."""
 
-    Attributes:
-        logger (Logger) (Optional): The logger object for logging messages.
-        client (OpenAI): The OpenAI client for API interactions.
-
-    Methods:
-        create_messages: Creates a list of messages for processing job descriptions.
-        generate_chat_completion: Generates chat completions using the OpenAI client and returns the parsed result.
-    """
-
-    def __init__(self, logger=None):
-        """
-        Initialize the OpenAIHandler with a logger instance and configure the OpenAI client
-        by loading the API key from environment variables.
-
-        """
-        self.logger = logger if logger is not None else Logger("openai.log")
-        self.logger.log.info("Initializing OpenAI Handler")
+    def __init__(self, logger: logging.Logger | Logger | None = None):
+        self.logger = resolve_logger(logger, name=__name__)
+        self.logger.info("Initializing OpenAI Handler")
         self._configure_openai()
 
-    def _configure_openai(self):
-        """
-        Configures the OpenAI client by loading the API key from environment variables.
-        If an error occurs while loading the environment variables, an EnvironmentError is raised
-        indicating that the API Key is missing in the .env file.
-        """
-        self.logger.log.info("Configuring OpenAI Client")
+    def _configure_openai(self) -> None:
+        """Configure the OpenAI client from environment variables."""
+        self.logger.info("Configuring OpenAI Client")
 
         try:
             load_dotenv()
-            OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-        except Exception as e:
-            self.logger.log.error(f"Error loading environment variables: {e}")
-            raise OSError("API Key is missing in .env file.") from e
+            openai_api_key = os.environ.get("OPENAI_API_KEY")
+        except Exception as error:
+            self.logger.error("Error loading environment variables: %s", error)
+            raise OSError("API Key is missing in .env file.") from error
 
-        self.client = OpenAI(
-            api_key=OPENAI_API_KEY,
-        )
+        self.client = OpenAI(api_key=openai_api_key)
 
-    def create_messages(self, description: str) -> list:
-        """
-        Creates a list of messages for processing job descriptions.
-
-        Parameters:
-            description (str): The job description to be processed.
-
-        Returns:
-            list: A list containing system and user messages for job description processing.
-        """
+    def create_messages(self, description: str) -> list[dict[str, str]]:
+        """Create the prompt payload for job description processing."""
         return [
             {
                 "role": "system",
@@ -85,19 +59,8 @@ class OpenAIHandler:
             },
         ]
 
-    def generate_chat_completion(self, messages: list) -> dict:
-        """
-        Generates chat completions using the OpenAI client and returns the parsed result.
-
-        Parameters:
-            messages (list): A list of messages for chat completion generation.
-
-        Returns:
-            json (dict): The parsed result obtained from the chat completion process in JSON format.
-
-        Raises:
-            Exception: If an unexpected error occurs during the chat completion generation process.
-        """
+    def generate_chat_completion(self, messages: list[dict[str, str]]) -> dict:
+        """Generate a JSON chat completion and parse it to a dictionary."""
         try:
             completion = self.client.chat.completions.create(
                 messages=messages,
@@ -105,11 +68,7 @@ class OpenAIHandler:
                 response_format={"type": "json_object"},
             )
             result = completion.choices[0].message.content
-            parsed_result = json.loads(result)
-
-            return parsed_result
-
-        except Exception as e:
-            self.logger.log.error(f"Unexpected error: {e}")
+            return json.loads(result)
+        except Exception:
+            self.logger.exception("Unexpected error during OpenAI completion.")
             raise
-

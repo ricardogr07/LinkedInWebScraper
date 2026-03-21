@@ -1,68 +1,60 @@
+from __future__ import annotations
+
 import random
 import time
 
 import requests
 
 from linkedin_web_scraper.config.constants import USER_AGENT_HEADERS
-from linkedin_web_scraper.infra.logging import Logger
+from linkedin_web_scraper.infra.logging import resolve_logger
 
 
-def get_random_header():
-    """Returns a random user-agent header from the list."""
+def get_random_header() -> dict[str, str]:
+    """Return a random user-agent header from the configured list."""
     return random.choice(USER_AGENT_HEADERS)
 
 
-def fetch_until_success(url, logger=None, max_retries=5, backoff_time=1):
-    """
-    Attempts to fetch jobs from a URL until success or maximum retries are reached.
-
-    Args:
-        url (str): The URL to fetch jobs from.
-        logger (Logger, optional): Logger instance. Defaults to creating a new logger.
-        max_retries (int, optional): Maximum number of retries before giving up. Defaults to 5.
-        backoff_time (int or float, optional): Initial backoff time in seconds between retries. Defaults to 1 second.
-
-    Returns:
-        Response or None: Returns the response object if successful, otherwise None.
-    """
-
-    # Create a default logger if none is provided
-    if logger is None:
-        logger = Logger("fetch_jobs.log")
+def fetch_until_success(
+    url: str,
+    logger=None,
+    max_retries: int = 5,
+    backoff_time: float = 1,
+    *,
+    session: requests.Session | None = None,
+    timeout: float = 10,
+):
+    """Attempt to fetch a URL until success or the retry budget is exhausted."""
+    active_logger = resolve_logger(logger, name=__name__)
+    request_get = session.get if session is not None else requests.get
 
     retries = 0
-
     while retries < max_retries:
         try:
-            # Log the attempt
-            logger.log.debug(
-                f"Attempting to fetch data from {url} (Attempt {retries + 1}/{max_retries})"
+            active_logger.debug(
+                "Attempting to fetch data from %s (Attempt %s/%s)",
+                url,
+                retries + 1,
+                max_retries,
             )
+            response = request_get(url, headers=get_random_header(), timeout=timeout)
 
-            # Send the request with a random user-agent header
-            response = requests.get(url, headers=get_random_header(), timeout=10)
-
-            # If the request is successful, return the response
             if response.status_code == 200:
-                logger.log.debug(f"Successfully fetched data from {url}")
+                active_logger.debug("Successfully fetched data from %s", url)
                 return response
 
-            # Log unsuccessful response
-            logger.log.debug(f"Received status code {response.status_code} from {url}")
+            active_logger.debug("Received status code %s from %s", response.status_code, url)
 
-        except requests.exceptions.RequestException as e:
-            logger.log.debug(
-                f"Request error: {e}. Retrying... (Attempt {retries + 1}/{max_retries})"
+        except requests.exceptions.RequestException as error:
+            active_logger.debug(
+                "Request error: %s. Retrying... (Attempt %s/%s)",
+                error,
+                retries + 1,
+                max_retries,
             )
 
-        # Increment retry count
         retries += 1
-
-        # Implement exponential backoff
         time.sleep(backoff_time)
-        backoff_time = min(backoff_time * 2, 60)  # Cap backoff at 60 seconds
+        backoff_time = min(backoff_time * 2, 60)
 
-    # Log that maximum retries were reached
-    logger.log.debug(f"Max retries reached. Unable to fetch jobs from {url}")
+    active_logger.debug("Max retries reached. Unable to fetch jobs from %s", url)
     return None
-
