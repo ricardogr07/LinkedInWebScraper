@@ -32,7 +32,7 @@ This page documents the Codex skills currently observed in this environment and 
 - map requests to the current modernization phase
 - remind the agent about risky-change validation gates
 - recommend safe subagent partitioning for tests, docs, packaging, or compatibility layers
-- preserve `example.py` and `main.py` behavior while deeper refactors land
+- preserve the `examples/` scripts and `main.py`/`process_ds_jobs.py` behavior while deeper refactors land
 - keep compatibility shims explicit during namespace migration
 
 ## Likely Inputs
@@ -47,4 +47,4 @@ This page documents the Codex skills currently observed in this environment and 
 - recommended subagent roles and write scopes
 - compatibility and rollback notes
 
-The future skill should remain a workflow guide, not a replacement for the architecture plan in `PLAN.md`.
+The future skill should remain a workflow guide, not a replacement for the repo docs under `docs/development/` and `AGENTS.md`.

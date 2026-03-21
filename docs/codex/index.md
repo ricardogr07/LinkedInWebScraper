@@ -10,9 +10,10 @@ This section is an internal developer support pack for using Codex effectively i
 - recommended integrations for OpenAI docs and GitHub workflows
 
 ## Source of Truth
-- Architecture and migration sequencing: `PLAN.md`
 - Risky-change validation rules: `docs/development/validation.md`
+- Release, publish, and automation flow: `docs/development/release-and-automation.md`
 - Agent workflow and Codex-specific guidance: this `docs/codex/` section
+- Repository ownership and current gates: `AGENTS.md`
 - Template command and integration catalog: `codex/config.toml`
 
 ## Status Model

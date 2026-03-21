@@ -3,3 +3,4 @@ include LICENSE
 include runtime.example.toml
 include Dockerfile
 include .dockerignore
+recursive-include examples *.py

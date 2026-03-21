@@ -55,7 +55,7 @@ def test_example_openai_script_smoke(monkeypatch):
     monkeypatch.setattr(linkedin_web_scraper, "LinkedInJobScraper", FakeScraper)
     monkeypatch.setattr(builtins, "print", lambda *args, **kwargs: captured.append(args))
 
-    runpy.run_path(str(ROOT / "example_openai.py"), run_name="__main__")
+    runpy.run_path(str(ROOT / "examples" / "example_openai.py"), run_name="__main__")
 
     assert captured
     assert captured[-1][0].to_string(index=False).find("True") != -1

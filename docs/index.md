@@ -1,4 +1,4 @@
-﻿# LinkedInWebScraper
+# LinkedInWebScraper
 
 LinkedInWebScraper provides a reusable workflow for scraping LinkedIn job listings, normalizing the results, persisting run history, and exporting datasets that can be rerun safely over time.
 
@@ -10,6 +10,7 @@ LinkedInWebScraper provides a reusable workflow for scraping LinkedIn job listin
 - Persists run history to SQLite through a clean application storage port
 - Writes managed artifacts under `artifacts/jobs`, `artifacts/logs`, and `artifacts/state`
 - Keeps OpenAI enrichment optional and isolated behind an extra plus runtime toggle
+- Keeps runnable examples under `examples/`
 
 ## Runtime Surfaces
 

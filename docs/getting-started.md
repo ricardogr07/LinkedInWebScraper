@@ -1,4 +1,4 @@
-﻿# Getting Started
+# Getting Started
 
 ## Installation
 
@@ -61,7 +61,7 @@ For the current PowerShell session on Windows:
 
 ```powershell
 $env:OPENAI_API_KEY = "sk-..."
-python example_openai.py
+python examples/example_openai.py
 ```
 
 To persist the key for your user account on Windows without committing it:
@@ -96,14 +96,21 @@ Export a persisted run from SQLite:
 linkedin-webscraper export --config runtime.toml --run-id <run-id>
 ```
 
-## Compatibility Scripts
+## Examples
 
-The modernization keeps the old script surfaces working:
+The runnable examples live under `examples/`:
 
 ```bash
-python example.py
-python example_advanced_config.py
-python example_openai.py
+python examples/example.py
+python examples/example_advanced_config.py
+python examples/example_openai.py
+```
+
+## Compatibility Scripts
+
+The modernization keeps the old root script surfaces working for compatibility:
+
+```bash
 python main.py
 python process_ds_jobs.py
 ```

@@ -1,4 +1,4 @@
-﻿# Tools and Commands
+# Tools and Commands
 
 This page lists the exact local commands and tool statuses that matter for development in this repo.
 
@@ -35,8 +35,8 @@ This page lists the exact local commands and tool statuses that matter for devel
 - Status: `ready`
 
 ### `smoke_examples`
-- Command: `python -m pytest -q tests/test_example_smoke.py tests/test_main_smoke.py`
-- Purpose: verify the example and daily-run orchestration paths stay intact.
+- Command: `python -m pytest -q tests/test_example_smoke.py tests/test_example_advanced_config_smoke.py tests/test_example_openai_smoke.py tests/test_main_smoke.py tests/test_process_ds_jobs_smoke.py`
+- Purpose: verify the example scripts and daily-run orchestration paths stay intact.
 - Status: `ready`
 
 ### `tox_all`
@@ -73,6 +73,3 @@ This page lists the exact local commands and tool statuses that matter for devel
 ## Why The Commands Use `python -m`
 - The repo toolchain is more reliable when invoked through the active Python interpreter.
 - It avoids dependence on whether script shims are on `PATH`.
-
-
-

@@ -40,17 +40,17 @@ status = "ready"
 
 [commands.build]
 command = "python -m build --no-isolation"
-purpose = "Build the sdist and wheel from the current working tree."
+purpose = "Build the source distribution and wheel from the current working tree."
 status = "ready"
 
 [commands.smoke_examples]
-command = "python -m pytest -q tests/test_example_smoke.py tests/test_main_smoke.py"
-purpose = "Run the example.py and main.py orchestration smoke checks."
+command = "python -m pytest -q tests/test_example_smoke.py tests/test_example_advanced_config_smoke.py tests/test_example_openai_smoke.py tests/test_main_smoke.py tests/test_process_ds_jobs_smoke.py"
+purpose = "Run the examples/ scripts and main orchestration smoke checks."
 status = "ready"
 
 [commands.tox_all]
 command = "python -m tox"
-purpose = "Run the tox environment matrix with missing interpreters skipped."
+purpose = "Run the tox matrix with missing interpreters skipped."
 status = "ready"
 
 [integrations.openai_docs]
@@ -133,6 +133,3 @@ target_responsibilities = [
   "validation and smoke-test sequencing",
   "safe subagent work partitioning",
 ]
-
-
-

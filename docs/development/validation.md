@@ -10,13 +10,13 @@ Run these checks after changes that can affect imports, runtime behavior, packag
 - `python -m ruff check .`
 - `python -m mkdocs build --strict`
 - the current Pyrefly seam from `codex/config.toml`
-- smoke checks for `example.py`, `main.py`, and `process_ds_jobs.py`
+- smoke checks for `examples/example.py`, `examples/example_advanced_config.py`, `examples/example_openai.py`, `main.py`, and `process_ds_jobs.py`
 
 ## Smoke Expectations
 
 The baseline compatibility smoke checks are:
 
-- `example.py` still orchestrates a scrape successfully with mocked dependencies
+- the example scripts still orchestrate a scrape successfully with mocked dependencies
 - `main.py` still defaults to the canonical daily CLI path
 - `process_ds_jobs.py` still defaults to the canonical once CLI path
 - managed outputs only appear in expected artifact/state locations unless an explicit path is passed
