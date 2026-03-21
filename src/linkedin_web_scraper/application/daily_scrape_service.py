@@ -11,6 +11,7 @@ from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 from linkedin_web_scraper.infra.logging import resolve_logger
+from linkedin_web_scraper.infra.paths import resolve_jobs_output_path
 from linkedin_web_scraper.infra.storage.file_manager import FileManager
 
 DEFAULT_DAILY_CITIES: tuple[str, ...] = ("Monterrey", "Guadalajara", "Mexico City")
@@ -29,19 +30,8 @@ def format_jobs_output_name(position: str, location: str) -> str:
 
 
 def resolve_output_path(file_name: str | Path, output_dir: str | Path | None = None) -> str:
-    """Resolve an output file name relative to an optional output directory."""
-    candidate = Path(file_name)
-
-    if candidate.is_absolute() or candidate.parent != Path("."):
-        candidate.parent.mkdir(parents=True, exist_ok=True)
-        return str(candidate)
-
-    if output_dir is None:
-        return str(candidate)
-
-    target_dir = Path(output_dir)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    return str(target_dir / candidate.name)
+    """Resolve an output file name under the managed jobs directory by default."""
+    return resolve_jobs_output_path(file_name, output_dir)
 
 
 class DailyScrapeService:
@@ -95,15 +85,18 @@ class DailyScrapeService:
             time_posted=time_posted,
             remote=RemoteType.ALL,
         )
-        file_manager = self.file_manager_cls(self.logger, file_manager_config)
+        file_manager = self.file_manager_cls(
+            self.logger,
+            file_manager_config,
+            output_dir=output_dir,
+        )
 
-        target_file_name = file_name
-        if target_file_name is None and output_dir is not None:
-            target_file_name = file_manager.generate_file_name()
-
-        if target_file_name is not None:
-            target_path = resolve_output_path(target_file_name, output_dir)
-            file_manager.save_jobs_to_csv(df=combined_jobs, file_name=target_path, append=append)
+        if file_name is not None:
+            file_manager.save_jobs_to_csv(
+                df=combined_jobs,
+                file_name=resolve_output_path(file_name, output_dir),
+                append=append,
+            )
         else:
             file_manager.save_jobs_to_csv(df=combined_jobs, append=append)
 

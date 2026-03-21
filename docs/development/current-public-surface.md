@@ -44,20 +44,19 @@ This document captures the current user-facing surface before modernization work
   - saves CSV output through `FileManager`
 - `main.py`
   - creates a `Logger`
-  - runs `run_ds_daily_scraper(...)` for multiple cities
-  - reads CSV files from repo root
-  - concatenates them into `LinkedIn_Jobs_Data_Scientist_Mexico.csv`
+  - runs `DailyScrapeService.run_daily()` for multiple cities
+  - keeps compatibility-friendly bare filenames at the call site
+  - resolves managed artifact paths internally
 
 ## Current Runtime Side Effects
-- log files can be created in the repo root:
+- log files resolve under `artifacts/logs` by default when a bare filename is used:
   - `main.log`
   - `example.log`
   - `example_advanced_config.log`
-  - `openai.log`
-  - `fetch_jobs.log`
-- CSV files can be created in the repo root:
+- CSV files resolve under `artifacts/jobs` by default when a bare filename is used:
   - per-city or per-run exports
   - combined daily export from `main.py`
+- explicit absolute paths or explicit nested relative paths still bypass the managed artifact directories
 - OpenAI integration expects `OPENAI_API_KEY` in environment or `.env`
 - importing modules can trigger broad cross-package imports because the current package layout re-exports many symbols at package import time
 

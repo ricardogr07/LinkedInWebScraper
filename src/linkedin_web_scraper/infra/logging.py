@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from typing import Protocol, TextIO, runtime_checkable
 
+from linkedin_web_scraper.infra.paths import resolve_log_path
+
 PACKAGE_LOGGER_NAME = "linkedin_web_scraper"
 DEFAULT_LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
 
@@ -77,7 +79,7 @@ def configure_logging(
     handlers: list[logging.Handler] = []
 
     if filename is not None:
-        handlers.append(logging.FileHandler(filename, encoding="utf-8"))
+        handlers.append(logging.FileHandler(resolve_log_path(filename), encoding="utf-8"))
 
     handlers.append(logging.StreamHandler(stream or sys.stderr))
 
@@ -104,6 +106,7 @@ class Logger:
             return
 
         self.filename = filename
+        self.file_path = resolve_log_path(filename) if filename is not None else None
         self.log = configure_logging(filename=filename)
         self._initialized = True
 

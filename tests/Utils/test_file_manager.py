@@ -1,12 +1,16 @@
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
+import linkedin_web_scraper.infra.paths as paths
 from LinkedInWebScraper.job_scraper_config import JobScraperConfig
 from Utils.file_manager import FileManager
 from Utils.logger import Logger
+
+TEST_TMP_ROOT = Path(".tmp") / "phase3-file-manager-tests"
 
 
 @pytest.fixture
@@ -56,11 +60,45 @@ class TestFileManager:
 
     @patch("pandas.DataFrame.to_csv")
     @patch("os.path.exists", return_value=False)
-    def test_save_jobs_to_csv_new_file(self, mock_exists, mock_to_csv, file_manager, sample_df):
+    def test_save_jobs_to_csv_new_file(
+        self,
+        mock_exists,
+        mock_to_csv,
+        file_manager,
+        sample_df,
+        monkeypatch,
+    ):
+        managed_dir = TEST_TMP_ROOT / "managed-jobs"
+        if managed_dir.exists():
+            import shutil
+
+            shutil.rmtree(managed_dir)
+        managed_dir.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setattr(paths, "DEFAULT_JOBS_OUTPUT_DIR", managed_dir)
+
         file_manager.save_jobs_to_csv(sample_df, append=False)
 
-        expected_file_name = file_manager.generate_file_name()
-        mock_to_csv.assert_called_once_with(expected_file_name, index=False)
+        expected_file_name = managed_dir / file_manager.generate_file_name()
+        mock_to_csv.assert_called_once_with(str(expected_file_name), index=False)
+
+    @patch("pandas.DataFrame.to_csv")
+    @patch("os.path.exists", return_value=False)
+    def test_save_jobs_to_csv_respects_explicit_path(
+        self,
+        mock_exists,
+        mock_to_csv,
+        file_manager,
+        sample_df,
+    ):
+        explicit_path = TEST_TMP_ROOT / "custom" / "jobs.csv"
+        if explicit_path.parent.exists():
+            import shutil
+
+            shutil.rmtree(explicit_path.parent)
+
+        file_manager.save_jobs_to_csv(sample_df, file_name=str(explicit_path), append=False)
+
+        mock_to_csv.assert_called_once_with(str(explicit_path), index=False)
 
     @patch("pandas.read_csv")
     @patch("pandas.DataFrame.to_csv")

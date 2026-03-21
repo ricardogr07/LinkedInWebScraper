@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from linkedin_web_scraper.infra.logging import resolve_logger
+from linkedin_web_scraper.infra.paths import resolve_jobs_output_path
 
 if TYPE_CHECKING:
     from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
@@ -15,16 +17,28 @@ if TYPE_CHECKING:
 class FileManager:
     """Persist scrape outputs to CSV files."""
 
-    def __init__(self, logger, config: JobScraperConfig):
+    def __init__(
+        self,
+        logger,
+        config: JobScraperConfig,
+        *,
+        output_dir: str | Path | None = None,
+    ):
         self.logger = resolve_logger(logger, name=__name__)
         self.position = config.position
         self.location = config.location
         self.time_posted = config.time_posted
         self.remote = config.remote
+        self.output_dir = output_dir
 
-    def save_jobs_to_csv(self, df: pd.DataFrame, file_name: str | None = None, append: bool = True) -> None:
+    def save_jobs_to_csv(
+        self,
+        df: pd.DataFrame,
+        file_name: str | None = None,
+        append: bool = True,
+    ) -> None:
         """Save or append jobs to a CSV file."""
-        target_file = file_name or self.generate_file_name()
+        target_file = resolve_jobs_output_path(file_name or self.generate_file_name(), self.output_dir)
 
         if append and os.path.exists(target_file):
             self.append_jobs_to_csv(df, target_file)
