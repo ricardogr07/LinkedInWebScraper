@@ -13,7 +13,7 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 
 ### GitHub Pages
 
-- Set Pages to deploy from GitHub Actions.
+- In repository Settings > Pages, set the source to GitHub Actions before the first docs deployment.
 - Keep `mkdocs.yml` aligned with the published Pages URL.
 
 ### Trusted Publishing

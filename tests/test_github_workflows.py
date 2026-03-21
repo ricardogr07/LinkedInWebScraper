@@ -33,6 +33,7 @@ def test_ci_workflow_uses_tox_matrix_and_canonical_smoke() -> None:
     assert "- data" in text
     assert "python -m tox -e" in text
     assert "py311" in text
+    assert ".[dev]" in text
     assert "py314" in text
     assert "smoke" in text
     assert "tests/test_example_smoke.py" in text
