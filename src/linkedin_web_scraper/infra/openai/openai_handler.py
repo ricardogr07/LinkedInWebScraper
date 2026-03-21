@@ -1,74 +1,190 @@
+"""Optional OpenAI adapter built on the Responses API."""
+
 from __future__ import annotations
 
-import json
 import logging
 import os
+from functools import lru_cache
+from typing import Any
 
-from dotenv import load_dotenv
-from openai import OpenAI
-
+from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 from linkedin_web_scraper.infra.logging import Logger, resolve_logger
+from linkedin_web_scraper.infra.openai.models import (
+    NOT_AVAILABLE,
+    JobDescriptionEnrichment,
+    OpenAIEnrichmentConfig,
+)
+
+SYSTEM_PROMPT = """You extract structured data from job descriptions. Return a concise English summary of the role itself, list the relevant hard skills and technologies, capture explicit experience requirements when present, capture the minimum level of studies when present, and mark whether English proficiency is required. If the source description is in English, treat English as required. Do not include company marketing or unrelated company background in the summary."""
+
+
+class OpenAIConfigurationError(RuntimeError):
+    """Raised when OpenAI enrichment is requested without valid configuration."""
+
+
+class OpenAIDependencyError(RuntimeError):
+    """Raised when optional OpenAI enrichment dependencies are missing."""
+
+
+@lru_cache(maxsize=1)
+def _load_openai_client_class() -> type[Any]:
+    try:
+        from openai import OpenAI
+    except ImportError as exc:
+        raise OpenAIDependencyError(
+            "OpenAI enrichment requires the optional dependencies installed via `.[openai]`."
+        ) from exc
+    return OpenAI
+
+
+@lru_cache(maxsize=1)
+def _load_response_schema() -> type[Any]:
+    try:
+        from pydantic import BaseModel, Field
+    except ImportError as exc:
+        raise OpenAIDependencyError(
+            "Structured OpenAI parsing requires the optional dependencies installed via `.[openai]`."
+        ) from exc
+
+    class JobDescriptionSchema(BaseModel):
+        description: str = Field(
+            description="A concise English summary of the job responsibilities only."
+        )
+        tech_stack: list[str] = Field(
+            default_factory=list,
+            description="Relevant programming languages, tools, frameworks, and hard skills.",
+        )
+        years_of_experience: str = Field(
+            default=NOT_AVAILABLE,
+            description="Experience requirement as written in the job description, or N/A.",
+        )
+        minimum_level_of_studies: str = Field(
+            default=NOT_AVAILABLE,
+            description="Minimum education requirement, or N/A if not stated.",
+        )
+        english_required: bool | None = Field(
+            default=None,
+            description="True when English proficiency is required or clearly implied.",
+        )
+
+    return JobDescriptionSchema
 
 
 class OpenAIHandler:
-    """Handle OpenAI interactions used for job description enrichment."""
+    """Handle optional OpenAI job-description enrichment using structured parsing."""
 
-    def __init__(self, logger: logging.Logger | Logger | None = None):
+    def __init__(
+        self,
+        logger: logging.Logger | Logger | None = None,
+        *,
+        model: str = DEFAULT_OPENAI_MODEL,
+        api_key: str | None = None,
+        client: Any | None = None,
+    ):
         self.logger = resolve_logger(logger, name=__name__)
-        self.logger.info("Initializing OpenAI Handler")
-        self._configure_openai()
+        self.config = OpenAIEnrichmentConfig(model=model, api_key=api_key)
+        self.client = client or self._configure_openai()
 
-    def _configure_openai(self) -> None:
-        """Configure the OpenAI client from environment variables."""
-        self.logger.info("Configuring OpenAI Client")
+    def _configure_openai(self) -> Any:
+        """Create an OpenAI client from the explicit config or environment variables."""
+        api_key = self._resolve_api_key()
+        client_class = _load_openai_client_class()
+        self.logger.info("Configuring OpenAI client for model %s.", self.config.model)
+        return client_class(api_key=api_key)
 
-        try:
-            load_dotenv()
-            openai_api_key = os.environ.get("OPENAI_API_KEY")
-        except Exception as error:
-            self.logger.error("Error loading environment variables: %s", error)
-            raise OSError("API Key is missing in .env file.") from error
+    def _resolve_api_key(self) -> str:
+        """Resolve the OpenAI API key from the handler config or environment."""
+        if self.config.api_key is not None:
+            return self.config.api_key
 
-        self.client = OpenAI(api_key=openai_api_key)
+        openai_api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        if not openai_api_key:
+            raise OpenAIConfigurationError(
+                "OpenAI enrichment requires `OPENAI_API_KEY` in the environment or an injected client."
+            )
+        return openai_api_key
 
     def create_messages(self, description: str) -> list[dict[str, str]]:
-        """Create the prompt payload for job description processing."""
+        """Create a compatibility prompt payload for a raw job description."""
+        normalized_description = str(description).strip()
         return [
-            {
-                "role": "system",
-                "content": """You are an assistant that extracts structured data from job descriptions in JSON format. Please ensure the output matches the following keys: Description, TechStack, YoE, MinLevelStudies, and English. The English key should be a boolean (True/False) that indicates whether the position requires English language proficiency, if the initial job description is in English, assume English as a requirement. If the information is in a language other than English, translate it and use English in the description you parse to the JSON. Do not add information about the company in the Description, only include relevant information about the job. Add all relevant information about the techstack, including all languages and hard skills. Return only the JSON object as the output, without anything else before or after it.""",
-            },
-            {
-                "role": "user",
-                "content": f"""Here's an example of how I want the job description processed:
-        Job Description:
-        "The main challenge for the Artificial Intelligence Developer is to develop and implement advanced AI solutions that optimize educational and administrative processes. This position requires the ability to apply cutting-edge AI technologies to enhance learning quality, automate administrative processes, and support data-driven decision-making, driving innovation and efficiency in the institution."
-
-        Output:
-        {{
-        "Description": "The main challenge for the Artificial Intelligence Developer is to develop and implement advanced AI solutions that optimize processes, improve learning quality, and support decision-making through data-driven technologies.",
-        "TechStack": ["Python", "R", "SQL", "NoSQL", "Agile Methodologies"],
-        "YoE": "N/A",
-        "MinLevelStudies": "N/A",
-        "English": True
-        }}
-
-    Now process this new job description:
-    "{description}"
-    """,
-            },
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": normalized_description},
         ]
 
-    def generate_chat_completion(self, messages: list[dict[str, str]]) -> dict:
-        """Generate a JSON chat completion and parse it to a dictionary."""
-        try:
-            completion = self.client.chat.completions.create(
-                messages=messages,
-                model="gpt-4o-mini",
-                response_format={"type": "json_object"},
-            )
-            result = completion.choices[0].message.content
-            return json.loads(result)
-        except Exception:
-            self.logger.exception("Unexpected error during OpenAI completion.")
-            raise
+    def extract_job_description(self, description: str) -> JobDescriptionEnrichment:
+        """Return structured enrichment data for a single job description."""
+        normalized_description = str(description).strip()
+        if not normalized_description:
+            return JobDescriptionEnrichment()
+
+        response = self.client.responses.parse(
+            model=self.config.model,
+            input=self.create_messages(normalized_description),
+            text_format=_load_response_schema(),
+        )
+        parsed = getattr(response, "output_parsed", None)
+        if parsed is None:
+            raise RuntimeError("OpenAI response did not include a parsed structured payload.")
+
+        raw_payload = parsed.model_dump(mode="json")
+        tech_stack = tuple(
+            item.strip() for item in raw_payload.get("tech_stack", []) if str(item).strip()
+        )
+
+        return JobDescriptionEnrichment(
+            short_description=self._normalize_text(raw_payload.get("description")),
+            tech_stack=tech_stack,
+            years_of_experience=self._normalize_text(raw_payload.get("years_of_experience")),
+            minimum_level_of_studies=self._normalize_text(
+                raw_payload.get("minimum_level_of_studies")
+            ),
+            english_required=self._normalize_english_required(raw_payload.get("english_required")),
+            model=str(getattr(response, "model", self.config.model) or self.config.model),
+            response_id=self._normalize_optional_text(getattr(response, "id", None)),
+            raw_payload=raw_payload,
+        )
+
+    def generate_chat_completion(self, messages: list[dict[str, Any]]) -> dict[str, object]:
+        """Compatibility wrapper that returns the historical JSON-compatible shape."""
+        description = self._extract_description_from_messages(messages)
+        return self.extract_job_description(description).to_legacy_dict()
+
+    @staticmethod
+    def _normalize_text(value: object) -> str:
+        normalized = str(value or "").strip()
+        return normalized or NOT_AVAILABLE
+
+    @staticmethod
+    def _normalize_optional_text(value: object) -> str | None:
+        normalized = str(value or "").strip()
+        return normalized or None
+
+    @staticmethod
+    def _normalize_english_required(value: object) -> bool | None:
+        if isinstance(value, bool):
+            return value
+        return None
+
+    @staticmethod
+    def _extract_description_from_messages(messages: list[dict[str, Any]]) -> str:
+        for message in reversed(messages):
+            if message.get("role") != "user":
+                continue
+
+            content = message.get("content")
+            if isinstance(content, str):
+                return content
+            if isinstance(content, list):
+                text_parts = [part.get("text", "") for part in content if isinstance(part, dict)]
+                return "\n".join(part for part in text_parts if part)
+
+        raise ValueError("No user message content found in OpenAI prompt payload.")
+
+
+__all__ = [
+    "OpenAIConfigurationError",
+    "OpenAIDependencyError",
+    "OpenAIHandler",
+    "SYSTEM_PROMPT",
+]

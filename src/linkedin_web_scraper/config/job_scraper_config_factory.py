@@ -6,6 +6,7 @@ from linkedin_web_scraper.config.job_scraper_config import (
     _normalize_remote_type,
     _normalize_time_posted,
 )
+from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 
 
@@ -17,6 +18,7 @@ class JobScraperConfigFactory:
         position: str,
         location: str,
         openai_enabled: bool = False,
+        openai_model: str = DEFAULT_OPENAI_MODEL,
         time_posted: str | TimePosted = TimePosted.DAY,
         remote: str | RemoteType = RemoteType.ALL,
         *,
@@ -28,6 +30,7 @@ class JobScraperConfigFactory:
             position=position,
             location=location,
             openai_enabled=openai_enabled,
+            openai_model=openai_model,
             time_posted=_normalize_time_posted(time_posted),
             remote=_normalize_remote_type(remote),
             distance=distance,

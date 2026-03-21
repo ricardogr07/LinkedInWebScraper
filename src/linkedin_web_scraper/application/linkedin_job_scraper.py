@@ -12,6 +12,7 @@ from linkedin_web_scraper.domain.job_title_classifier import JobTitleClassifier
 from linkedin_web_scraper.infra.http.job_scraper import JobScraper
 from linkedin_web_scraper.infra.logging import Logger, resolve_logger
 from linkedin_web_scraper.infra.openai.job_description_processor import JobDescriptionProcessor
+from linkedin_web_scraper.infra.openai.models import JobDescriptionEnricher
 from linkedin_web_scraper.infra.openai.openai_handler import OpenAIHandler
 
 
@@ -30,7 +31,7 @@ class LinkedInJobScraper:
         *,
         job_scraper: JobScraper | None = None,
         job_data_cleaner: JobDataCleaner | None = None,
-        openai_handler: OpenAIHandler | None = None,
+        openai_handler: JobDescriptionEnricher | None = None,
     ):
         """Build a scraper pipeline with optional dependency overrides."""
         self.config = config
@@ -49,8 +50,7 @@ class LinkedInJobScraper:
 
         self.description_processor: JobDescriptionProcessor | None = None
         if self.config.openai_enabled:
-            handler = openai_handler or OpenAIHandler(self.logger)
-            self.description_processor = JobDescriptionProcessor(handler, self.logger)
+            self.description_processor = self._create_description_processor(openai_handler)
 
     def _initialize_advanced_config(self) -> None:
         """Load optional overrides from the advanced config object."""
@@ -62,6 +62,21 @@ class LinkedInJobScraper:
             self.location_mapping = self.config.advanced_config.LOCATION_MAPPING
             self.keywords = self.config.advanced_config.KEYWORDS
             self.skills_categories = self.config.advanced_config.SKILLS_CATEGORIES
+
+    def _create_description_processor(
+        self, openai_handler: JobDescriptionEnricher | None
+    ) -> JobDescriptionProcessor | None:
+        try:
+            handler = openai_handler or OpenAIHandler(
+                self.logger,
+                model=self.config.openai_model,
+            )
+        except Exception:
+            self.logger.exception(
+                "OpenAI enrichment requested but initialization failed. Continuing without it."
+            )
+            return None
+        return JobDescriptionProcessor(handler, self.logger)
 
     def run(self) -> pd.DataFrame:
         """Run the end-to-end scrape pipeline and return the resulting dataframe."""
@@ -91,10 +106,15 @@ class LinkedInJobScraper:
             jobs_with_details = self.fetch_job_details(classified_jobs)
             cleaned_jobs_with_details = self.clean_job_details(jobs_with_details)
 
-            if not self.config.openai_enabled:
-                self.logger.info(
-                    "OpenAI enrichment disabled. Returning jobs with extracted details only."
-                )
+            if not self.config.openai_enabled or self.description_processor is None:
+                if self.config.openai_enabled and self.description_processor is None:
+                    self.logger.warning(
+                        "OpenAI enrichment unavailable. Returning jobs with extracted details only."
+                    )
+                else:
+                    self.logger.info(
+                        "OpenAI enrichment disabled. Returning jobs with extracted details only."
+                    )
                 return cleaned_jobs_with_details
 
             enriched_jobs = self.enrich_jobs_with_descriptions(cleaned_jobs_with_details)
@@ -169,8 +189,8 @@ class LinkedInJobScraper:
         try:
             return self.description_processor.process_job_descriptions(cleaned_jobs_with_details)
         except Exception:
-            self.logger.exception("Failed to enrich job descriptions.")
-            return pd.DataFrame()
+            self.logger.exception("Failed to enrich job descriptions. Returning base dataset.")
+            return cleaned_jobs_with_details
 
     def final_processing(self, enriched_jobs: pd.DataFrame) -> pd.DataFrame:
         """Perform final processing on the enriched job data."""
@@ -180,4 +200,4 @@ class LinkedInJobScraper:
             )
         except Exception:
             self.logger.exception("Failed during final job data processing.")
-            return pd.DataFrame()
+            return enriched_jobs

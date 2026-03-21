@@ -8,7 +8,7 @@ LinkedInWebScraper provides a reusable workflow for scraping LinkedIn job listin
 - Cleans and normalizes job metadata such as locations, job IDs, and job-detail fields
 - Supports daily multi-city export workflows through `DailyScrapeService`
 - Writes managed artifacts under `artifacts/jobs` and `artifacts/logs` by default
-- Keeps OpenAI enrichment isolated behind an optional runtime path
+- Keeps OpenAI enrichment isolated behind an optional runtime path and package extra
 
 ## Architecture
 
@@ -28,6 +28,7 @@ Legacy namespaces such as `LinkedInWebScraper`, `Utils`, and `OpenAIHandler` sti
 - Bare CSV export filenames resolve under `artifacts/jobs`
 - Explicit absolute or nested relative paths bypass the managed artifact directories
 - The current storage model is file-based; database persistence is planned for a later phase
+- OpenAI enrichment is optional and requires the `openai` extra plus `OPENAI_API_KEY`
 
 ## Next Steps
 

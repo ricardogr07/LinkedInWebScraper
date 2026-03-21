@@ -12,6 +12,7 @@ from linkedin_web_scraper.config.constants import (
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
+from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "DATA_SCIENCE_KEYWORDS",
     "TECH_STACK_CATEGORIES",
     "normalize_location_name",
+    "DEFAULT_OPENAI_MODEL",
     "JobScraperAdvancedConfig",
     "JobScraperConfig",
     "JobScraperConfigFactory",

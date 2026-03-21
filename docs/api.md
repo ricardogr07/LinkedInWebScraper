@@ -14,6 +14,8 @@
 
 ::: linkedin_web_scraper.config.job_scraper_config_factory
 
+::: linkedin_web_scraper.config.openai
+
 ::: linkedin_web_scraper.config.options
 
 ## Domain
@@ -35,3 +37,11 @@
 ::: linkedin_web_scraper.infra.http.utils
 
 ::: linkedin_web_scraper.infra.http.job_scraper
+
+## OpenAI
+
+::: linkedin_web_scraper.infra.openai.models
+
+::: linkedin_web_scraper.infra.openai.openai_handler
+
+::: linkedin_web_scraper.infra.openai.job_description_processor

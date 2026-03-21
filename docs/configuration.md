@@ -9,12 +9,13 @@ This project currently uses programmatic configuration objects. TOML-driven runt
 - `position`: job title or search phrase.
 - `location`: LinkedIn location text.
 - `openai_enabled`: enable optional description enrichment.
+- `openai_model`: the model name used for optional OpenAI enrichment. Defaults to `gpt-4o-mini`.
 - `time_posted`: `TimePosted` enum value or a matching string.
 - `remote`: `RemoteType` enum value or a matching string.
 - `distance`: search radius in miles.
 - `advanced_config`: optional `JobScraperAdvancedConfig` overrides.
 
-String values for `time_posted` and `remote` are normalized into enums during initialization.
+String values for `time_posted` and `remote` are normalized into enums during initialization. `openai_model` is stripped and normalized to the default model when blank.
 
 ## `JobScraperAdvancedConfig`
 
@@ -33,6 +34,16 @@ The model copies mutable input collections so callers can safely reuse their ori
 
 Use the enums directly in new code when possible.
 
+## OpenAI Runtime Behavior
+
+OpenAI support is optional.
+
+- Install the optional extra before enabling enrichment: `pip install LinkedInWebScraper[openai]`
+- Set `OPENAI_API_KEY` in the environment before running the scraper
+- The library does not call `dotenv` during import or runtime setup
+- Enrichment uses the configured `openai_model` and is best-effort; failures fall back to the non-enriched dataset
+- Enriched rows include `OpenAIModel`, `OpenAIResponseId`, and `OpenAIRawPayload` for audit/debug visibility
+
 ## Artifact Paths
 
 By default, managed outputs resolve under `artifacts/`:
@@ -44,7 +55,7 @@ Explicit absolute paths and explicit nested relative paths are preserved as give
 
 ## Current Storage Model
 
-Phase 4 still uses filesystem-backed artifacts as the default persistence model:
+Phase 5 still uses filesystem-backed artifacts as the default persistence model:
 
 - CSV exports are the current reusable job-data output
 - logs are written alongside other managed artifacts

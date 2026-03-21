@@ -4,6 +4,7 @@ skip_missing_interpreters = true
 
 [env_run_base]
 package = "wheel"
+extras = ["openai"]
 deps = [
   "pytest>=8.3.2",
   "pytest-cov>=5.0.0",
@@ -33,6 +34,7 @@ commands = [[
   "src/linkedin_web_scraper/config/job_scraper_config.py",
   "src/linkedin_web_scraper/config/job_scraper_advanced_config.py",
   "src/linkedin_web_scraper/config/job_scraper_config_factory.py",
+  "src/linkedin_web_scraper/config/openai.py",
   "src/linkedin_web_scraper/config/options.py",
   "src/linkedin_web_scraper/application/daily_scrape_service.py",
   "src/linkedin_web_scraper/application/linkedin_job_scraper.py",
@@ -43,6 +45,9 @@ commands = [[
   "src/linkedin_web_scraper/infra/http/policy.py",
   "src/linkedin_web_scraper/infra/http/utils.py",
   "src/linkedin_web_scraper/infra/http/job_scraper.py",
+  "src/linkedin_web_scraper/infra/openai/models.py",
+  "src/linkedin_web_scraper/infra/openai/openai_handler.py",
+  "src/linkedin_web_scraper/infra/openai/job_description_processor.py",
 ]]
 
 [env.docs]

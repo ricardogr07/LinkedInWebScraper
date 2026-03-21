@@ -25,6 +25,7 @@ The baseline compatibility smoke checks are:
 - build the sdist and wheel
 - verify the build succeeds from the current working tree
 - verify canonical and legacy imports still load from an installed artifact when possible
+- verify optional features remain optional at import time when dependencies move behind extras
 
 ## When Logging Changes
 
@@ -34,9 +35,10 @@ The baseline compatibility smoke checks are:
 
 ## When OpenAI Changes
 
-- run offline adapter or handler tests
+- run offline OpenAI handler and processor tests first
 - only run live OpenAI tests when credentials are present and the test is explicitly selected
 - verify the non-OpenAI scraper path still works without optional enrichment
+- verify OpenAI setup failures fall back to the base cleaned dataset instead of aborting the run
 
 ## When Storage Changes
 

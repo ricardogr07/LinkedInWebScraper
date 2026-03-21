@@ -8,6 +8,12 @@ Install the published package:
 pip install LinkedInWebScraper
 ```
 
+Install the optional OpenAI enrichment extra when you need description post-processing:
+
+```bash
+pip install LinkedInWebScraper[openai]
+```
+
 For local development:
 
 ```bash
@@ -38,6 +44,20 @@ print(jobs.head())
 ```
 
 Bare log names resolve to `artifacts/logs/`. Bare CSV output names resolve to `artifacts/jobs/`.
+
+## Enable OpenAI Enrichment
+
+```python
+config = JobScraperConfig(
+    position="Data Scientist",
+    location="Monterrey",
+    remote=RemoteType.REMOTE,
+    openai_enabled=True,
+    openai_model="gpt-4o-mini",
+)
+```
+
+Set `OPENAI_API_KEY` in the environment before running the scraper. The library does not load `.env` files during import. If enrichment setup fails, the scraper returns the base cleaned dataset instead of aborting the full run.
 
 ## Run The Example Scripts
 
@@ -77,5 +97,5 @@ python -m mkdocs build --strict
 For the currently enforced type-check seam, run:
 
 ```bash
-python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py
+python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py
 ```
