@@ -1,3 +1,5 @@
+"""Public configuration models, options, and constants."""
+
 from linkedin_web_scraper.config.constants import (
     DATA_SCIENCE_KEYWORDS,
     LOCATION_MAPPING,

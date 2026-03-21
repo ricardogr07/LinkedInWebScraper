@@ -2,7 +2,7 @@
 
 Use these files first:
 - `PLAN.md`
-- `COMPATIBILITY_CHECKLIST.md`
+- `docs/development/validation.md`
 - `docs/codex/`
 
 Core repo rules:

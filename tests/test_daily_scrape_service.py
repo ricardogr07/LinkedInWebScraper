@@ -15,7 +15,7 @@ from linkedin_web_scraper.application.daily_scrape_service import (
 from linkedin_web_scraper.config.options import RemoteType
 from linkedin_web_scraper.infra import paths
 
-TEST_TMP_ROOT = Path(".tmp") / "phase3-daily-service-tests"
+TEST_TMP_ROOT = Path(".tmp") / "daily-service-tests"
 
 
 class FakeScraper:
@@ -164,3 +164,4 @@ def test_run_daily_defaults_combined_output_to_managed_directory(monkeypatch):
     )
 
     shutil.rmtree(managed_dir)
+

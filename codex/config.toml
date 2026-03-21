@@ -3,7 +3,7 @@ name = "LinkedInWebScraper"
 shell = "powershell"
 platform = "windows"
 python_floor = "3.11"
-docs_root = "docs/codex"
+docs_root = "docs"
 
 [rules]
 commit_after_risky_change = true
@@ -29,13 +29,13 @@ purpose = "Apply repository formatting rules."
 status = "ready"
 
 [commands.type_bootstrap]
-command = "python -m pyrefly check src/Utils/file_manager.py src/Utils/logger.py"
-purpose = "Run the currently enabled bootstrap type-check seam before wider type coverage lands."
-status = "bootstrap"
+command = "python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/interfaces/cli/main.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py"
+purpose = "Run the current canonical-package Pyrefly seam across config, CLI, daily orchestration, and core infrastructure helpers."
+status = "incremental"
 
 [commands.docs]
 command = "python -m mkdocs build --strict"
-purpose = "Build internal documentation and fail on nav or markdown issues."
+purpose = "Build user-facing and internal documentation and fail on nav or markdown issues."
 status = "ready"
 
 [commands.build]
@@ -65,7 +65,7 @@ session_visible = false
 [integrations.github_cli]
 kind = "command"
 status = "installed_needs_auth"
-availability = "blocked_misconfigured"
+availability = "blocked_or_misconfigured"
 purpose = "Local GitHub operations such as PR inspection, issue lookup, and workflow checks."
 check_command = "gh auth status"
 reference = "https://cli.github.com/"

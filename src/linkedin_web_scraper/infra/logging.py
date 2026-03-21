@@ -49,12 +49,9 @@ def resolve_logger(
         return get_logger(name)
     if isinstance(logger, logging.Logger):
         return logger
-
-    wrapped_logger = getattr(logger, "log", None)
-    if wrapped_logger is not None:
-        return wrapped_logger
-
-    return logger
+    if isinstance(logger, SupportsLogAttribute):
+        return logger.log
+    raise TypeError(f"Unsupported logger type: {type(logger)!r}")
 
 
 def configure_logging(

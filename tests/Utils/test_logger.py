@@ -15,7 +15,7 @@ from linkedin_web_scraper.infra.logging import (
 )
 from Utils.logger import Logger
 
-TEST_TMP_ROOT = Path(".tmp") / "phase3-logger-tests"
+TEST_TMP_ROOT = Path(".tmp") / "logger-tests"
 
 
 def setup_function() -> None:
@@ -53,16 +53,16 @@ def test_configure_logging_resolves_relative_files_to_managed_logs_directory(mon
         shutil.rmtree(managed_logs_dir)
     monkeypatch.setattr(paths, "DEFAULT_LOGS_DIR", managed_logs_dir)
 
-    logger = configure_logging(filename="phase3.log", force=True)
-    logger.info("phase3-check")
+    logger = configure_logging(filename="logger-test.log", force=True)
+    logger.info("logger-check")
 
     for handler in logger.handlers[:]:
         handler.flush()
         handler.close()
         logger.removeHandler(handler)
 
-    assert (managed_logs_dir / "phase3.log").exists()
-    assert "phase3-check" in (managed_logs_dir / "phase3.log").read_text(encoding="utf-8")
+    assert (managed_logs_dir / "logger-test.log").exists()
+    assert "logger-check" in (managed_logs_dir / "logger-test.log").read_text(encoding="utf-8")
 
     shutil.rmtree(managed_logs_dir)
 
@@ -72,3 +72,4 @@ def test_resolve_logger_prefers_wrapped_log():
     wrapper = type("Wrapper", (), {"log": wrapped_logger})()
 
     assert resolve_logger(wrapper, name="ignored") is wrapped_logger
+

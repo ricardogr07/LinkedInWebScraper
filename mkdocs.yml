@@ -7,8 +7,12 @@ docs_dir: docs
 theme:
   name: material
 nav:
-  - Development:
-      - Current public surface: development/current-public-surface.md
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - API Reference: api.md
+  - Internal:
+      - Validation: development/validation.md
       - Codex:
           - Overview: codex/index.md
           - Subagents: codex/subagents.md
@@ -17,3 +21,11 @@ nav:
           - Integrations: codex/integrations.md
 plugins:
   - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            members_order: source
+            show_root_heading: true
+            show_source: false

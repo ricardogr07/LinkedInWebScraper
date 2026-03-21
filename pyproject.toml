@@ -61,7 +61,6 @@ Homepage = "https://github.com/ricardogr07/LinkedInWebScraper"
 Source = "https://github.com/ricardogr07/LinkedInWebScraper"
 
 [project.scripts]
-# Temporary placeholder until the dedicated CLI lands in the runtime refactor phase.
 linkedin-webscraper = "linkedin_web_scraper.interfaces.cli.main:main"
 
 [tool.setuptools]
@@ -105,7 +104,17 @@ show_missing = true
 skip_covered = false
 
 [tool.pyrefly]
-project-includes = ["src/Utils/file_manager.py", "src/Utils/logger.py"]
+project-includes = [
+  "src/linkedin_web_scraper/config/job_scraper_config.py",
+  "src/linkedin_web_scraper/config/job_scraper_advanced_config.py",
+  "src/linkedin_web_scraper/config/job_scraper_config_factory.py",
+  "src/linkedin_web_scraper/config/options.py",
+  "src/linkedin_web_scraper/application/daily_scrape_service.py",
+  "src/linkedin_web_scraper/interfaces/cli/main.py",
+  "src/linkedin_web_scraper/infra/logging.py",
+  "src/linkedin_web_scraper/infra/paths.py",
+  "src/linkedin_web_scraper/infra/http/policy.py",
+]
 search-path = ["src"]
 python-version = "3.11"
 use-ignore-files = true

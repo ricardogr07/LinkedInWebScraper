@@ -7,12 +7,14 @@ from linkedin_web_scraper.config.options import RemoteType, TimePosted
 
 
 def _normalize_time_posted(value: str | TimePosted) -> TimePosted:
+    """Normalize user-facing time-posted values to the enum form."""
     if isinstance(value, TimePosted):
         return value
     return TimePosted(value.upper())
 
 
 def _normalize_remote_type(value: str | RemoteType) -> RemoteType:
+    """Normalize user-facing remote-type values to the enum form."""
     if isinstance(value, RemoteType):
         return value
     return RemoteType(value.upper())

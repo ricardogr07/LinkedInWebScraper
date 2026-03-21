@@ -27,7 +27,19 @@ commands = [
 
 [env.type]
 deps = ["pyrefly>=0.26.0"]
-commands = [["pyrefly", "check", "src/Utils/file_manager.py", "src/Utils/logger.py"]]
+commands = [[
+  "pyrefly",
+  "check",
+  "src/linkedin_web_scraper/config/job_scraper_config.py",
+  "src/linkedin_web_scraper/config/job_scraper_advanced_config.py",
+  "src/linkedin_web_scraper/config/job_scraper_config_factory.py",
+  "src/linkedin_web_scraper/config/options.py",
+  "src/linkedin_web_scraper/application/daily_scrape_service.py",
+  "src/linkedin_web_scraper/interfaces/cli/main.py",
+  "src/linkedin_web_scraper/infra/logging.py",
+  "src/linkedin_web_scraper/infra/paths.py",
+  "src/linkedin_web_scraper/infra/http/policy.py",
+]]
 
 [env.docs]
 deps = [

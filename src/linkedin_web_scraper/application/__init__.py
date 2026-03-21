@@ -1,3 +1,5 @@
+"""Application-layer services exposed by the canonical package."""
+
 from linkedin_web_scraper.application.daily_scrape_service import (
     DEFAULT_DAILY_CITIES,
     DEFAULT_REMOTE_TYPES,

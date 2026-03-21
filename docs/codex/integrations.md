@@ -1,6 +1,6 @@
 # Integrations
 
-This page covers the small set of integrations worth standardizing before Phase 2. It intentionally separates what is usable now from what is recommended later.
+This page covers the small set of integrations worth standardizing for ongoing development work. It intentionally separates what is usable now from what is recommended later.
 
 ## Status Model
 - `available_now`: usable immediately in this environment
@@ -49,4 +49,4 @@ gh auth status
 ## Deferred Integrations
 - cloud, database, and browser-oriented MCPs are intentionally deferred
 - they may become useful later for CI/CD, cloud deployment, or persistent storage work
-- they are not standardized in this subtask because Phase 2 and Phase 6 requirements are still evolving
+- they are not standardized yet because the current repo workflow does not depend on them

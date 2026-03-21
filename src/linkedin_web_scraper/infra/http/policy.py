@@ -61,15 +61,17 @@ class HttpRequestPolicy:
         retryable_status_codes: tuple[int, ...] | None = None,
     ) -> HttpRequestPolicy:
         """Return a copy of the policy with selected fields replaced."""
-        replacements = {}
-        if timeout is not None:
-            replacements["timeout"] = timeout
-        if max_retries is not None:
-            replacements["max_retries"] = max_retries
-        if initial_backoff is not None:
-            replacements["initial_backoff"] = initial_backoff
-        if max_backoff is not None:
-            replacements["max_backoff"] = max_backoff
-        if retryable_status_codes is not None:
-            replacements["retryable_status_codes"] = retryable_status_codes
-        return replace(self, **replacements)
+        return replace(
+            self,
+            timeout=self.timeout if timeout is None else timeout,
+            max_retries=self.max_retries if max_retries is None else max_retries,
+            initial_backoff=(
+                self.initial_backoff if initial_backoff is None else initial_backoff
+            ),
+            max_backoff=self.max_backoff if max_backoff is None else max_backoff,
+            retryable_status_codes=(
+                self.retryable_status_codes
+                if retryable_status_codes is None
+                else retryable_status_codes
+            ),
+        )

@@ -1,6 +1,6 @@
 # Codex Enablement
 
-This section is an internal developer support pack for using Codex effectively in this repository. It exists to make later refactors safer, more repeatable, and easier to delegate.
+This section is an internal developer support pack for using Codex effectively in this repository. It exists to make refactors safer, more repeatable, and easier to delegate.
 
 ## What This Covers
 - repo-specific agent rules and validation gates
@@ -11,9 +11,9 @@ This section is an internal developer support pack for using Codex effectively i
 
 ## Source of Truth
 - Architecture and migration sequencing: `PLAN.md`
-- Risky-change validation rules: `COMPATIBILITY_CHECKLIST.md`
+- Risky-change validation rules: `docs/development/validation.md`
 - Agent workflow and Codex-specific guidance: this `docs/codex/` section
-- Template command/integration catalog: `codex/config.toml`
+- Template command and integration catalog: `codex/config.toml`
 
 ## Status Model
 - `available_now`: usable in the current environment without extra setup
@@ -30,13 +30,13 @@ This section is an internal developer support pack for using Codex effectively i
 
 ### Recommended Later
 - `openai_docs` MCP is the primary recommended documentation integration for OpenAI work
-- `github_mcp` is worth adding later for richer GitHub context once auth/setup is stable
+- `github_mcp` is worth adding later for richer GitHub context once auth and setup are stable
 - a future repo-specific skill can help with phased modernization work
 
 ### Blocked Or Misconfigured
 - `gh` is installed, but the current GitHub auth token is invalid
-- `docker` is installed, but the daemon/config are not currently usable from this session
+- `docker` is installed, but the daemon or config are not currently usable from this session
 - no MCP servers are visible in this session right now
 
-## Why This Exists Before Phase 2
-Phase 2 will introduce the canonical package layout and compatibility shims. That work benefits from explicit subagent roles, exact validation commands, and a shared record of which integrations are real versus merely aspirational.
+## Why This Exists
+This repository uses Codex as an implementation partner during a phased modernization. These notes keep agent roles, validation commands, and optional integrations explicit so each checkpoint stays reviewable and repeatable.

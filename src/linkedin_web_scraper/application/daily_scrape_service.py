@@ -7,7 +7,6 @@ from time import perf_counter
 import pandas as pd
 
 from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScraper
-from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 from linkedin_web_scraper.infra.logging import resolve_logger
@@ -78,7 +77,7 @@ class DailyScrapeService:
             scraper_results.append(scraper.run())
 
         combined_jobs = pd.concat(scraper_results, ignore_index=True)
-        file_manager_config = JobScraperConfig(
+        file_manager_config = self.config_factory.create(
             position=position,
             location=location,
             openai_enabled=openai_enabled,

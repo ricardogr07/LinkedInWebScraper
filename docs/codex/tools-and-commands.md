@@ -20,13 +20,13 @@ This page lists the exact local commands and tool statuses that matter for devel
 - Status: `ready`
 
 ### `type_bootstrap`
-- Command: `python -m pyrefly check src/Utils/file_manager.py src/Utils/logger.py`
-- Purpose: run the initial narrow Pyrefly seam before wider type coverage is introduced.
-- Status: `bootstrap`
+- Command: `python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/interfaces/cli/main.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py`
+- Purpose: run the current canonical-package Pyrefly seam across config, CLI, daily orchestration, and core infrastructure helpers.
+- Status: `incremental`
 
 ### `docs`
 - Command: `python -m mkdocs build --strict`
-- Purpose: build internal docs and fail on nav or markdown errors.
+- Purpose: build user-facing and internal docs and fail on nav or markdown errors.
 - Status: `ready`
 
 ### `build`
@@ -63,7 +63,7 @@ This page lists the exact local commands and tool statuses that matter for devel
 ### `docker`
 - Check: `docker version`
 - Status: `blocked_or_misconfigured`
-- Current note: the CLI is installed, but the daemon/config is not currently usable from this session.
+- Current note: the CLI is installed, but the daemon or config are not currently usable from this session.
 
 ### `codex`
 - Check: `codex --help`

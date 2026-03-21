@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from io import StringIO
-
 import pandas as pd
 
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
+from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 from linkedin_web_scraper.domain.job_data_cleaner import JobDataCleaner
-from linkedin_web_scraper.infra.logging import configure_logging
 
 
 def test_job_scraper_config_normalizes_string_inputs():
@@ -23,6 +21,18 @@ def test_job_scraper_config_normalizes_string_inputs():
     assert config.location == "Monterrey"
     assert config.time_posted is TimePosted.DAY
     assert config.remote is RemoteType.REMOTE
+
+
+def test_job_scraper_config_factory_normalizes_user_facing_inputs():
+    config = JobScraperConfigFactory.create(
+        position="Data Scientist",
+        location="Monterrey",
+        time_posted="week",
+        remote="hybrid",
+    )
+
+    assert config.time_posted is TimePosted.WEEK
+    assert config.remote is RemoteType.HYBRID
 
 
 def test_advanced_config_copies_mutable_inputs():
@@ -61,13 +71,3 @@ def test_job_data_cleaner_uses_passed_location_mapping():
 
     assert cleaned.iloc[0]["Location"] == "MTY"
     assert cleaned.iloc[0]["JobID"] == "1234567890"
-
-
-def test_configure_logging_supports_stream_only_configuration():
-    stream = StringIO()
-    logger = configure_logging(stream=stream, filename=None, force=True)
-
-    logger.warning("phase3-check")
-
-    assert "phase3-check" in stream.getvalue()
-

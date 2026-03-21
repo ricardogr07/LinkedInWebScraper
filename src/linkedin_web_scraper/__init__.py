@@ -1,3 +1,5 @@
+"""Public package exports for LinkedInWebScraper."""
+
 from linkedin_web_scraper.application.daily_scrape_service import (
     DEFAULT_DAILY_CITIES,
     DEFAULT_REMOTE_TYPES,

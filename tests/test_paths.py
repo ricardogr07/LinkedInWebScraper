@@ -6,7 +6,7 @@ from pathlib import Path
 import linkedin_web_scraper.infra.paths as paths
 from linkedin_web_scraper.infra.paths import resolve_jobs_output_path, resolve_log_path
 
-TEST_TMP_ROOT = Path(".tmp") / "phase3-artifact-path-tests"
+TEST_TMP_ROOT = Path(".tmp") / "artifact-path-tests"
 
 
 def _reset_directory(path: Path) -> Path:
@@ -51,3 +51,4 @@ def test_resolve_log_path_defaults_to_managed_directory(monkeypatch):
     assert managed_dir.exists()
 
     shutil.rmtree(managed_dir)
+
