@@ -62,7 +62,7 @@ Source = "https://github.com/ricardogr07/LinkedInWebScraper"
 
 [project.scripts]
 # Temporary placeholder until the dedicated CLI lands in the runtime refactor phase.
-linkedin-webscraper = "LinkedInWebScraper.cli:main"
+linkedin-webscraper = "linkedin_web_scraper.interfaces.cli.main:main"
 
 [tool.setuptools]
 include-package-data = true
@@ -70,7 +70,7 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["LinkedInWebScraper*", "Utils*", "OpenAIHandler*"]
+include = ["linkedin_web_scraper*", "LinkedInWebScraper*", "Utils*", "OpenAIHandler*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -p no:cacheprovider"
@@ -79,12 +79,15 @@ markers = [
   "live_linkedin: tests that hit LinkedIn or related live HTTP endpoints",
   "live_openai: tests that hit the OpenAI API",
 ]
+filterwarnings = [
+  "ignore:.*Import from `linkedin_web_scraper` instead\\.:DeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 src = ["src", "."]
-extend-exclude = ["site", "pytest-cache-files-*"]
+extend-exclude = ["site", ".tmp", "pytest-cache-files-*"]
 
 [tool.ruff.format]
 quote-style = "double"

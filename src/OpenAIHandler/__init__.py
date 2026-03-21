@@ -1,3 +1,6 @@
-from .openai_handler import OpenAIHandler
+from linkedin_web_scraper._compat import warn_legacy_namespace
+from linkedin_web_scraper.infra.openai.openai_handler import OpenAIHandler
+
+warn_legacy_namespace("OpenAIHandler")
 
 __all__ = ["OpenAIHandler"]

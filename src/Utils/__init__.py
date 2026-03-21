@@ -1,4 +1,5 @@
-from .constants import (
+from linkedin_web_scraper._compat import warn_legacy_namespace
+from linkedin_web_scraper.config.constants import (
     DATA_SCIENCE_KEYWORDS,
     LOCATION_MAPPING,
     REMOTE_OPTION,
@@ -6,8 +7,10 @@ from .constants import (
     TIME_POSTED_OPTION,
     USER_AGENT_HEADERS,
 )
-from .file_manager import FileManager
-from .logger import Logger
+from linkedin_web_scraper.infra.logging import Logger
+from linkedin_web_scraper.infra.storage.file_manager import FileManager
+
+warn_legacy_namespace("Utils")
 
 __all__ = [
     "TIME_POSTED_OPTION",
