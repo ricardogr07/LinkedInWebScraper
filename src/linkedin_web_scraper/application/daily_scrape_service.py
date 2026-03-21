@@ -7,11 +7,13 @@ from time import perf_counter
 import pandas as pd
 
 from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScraper
+from linkedin_web_scraper.application.storage import ScrapeRunContext, ScrapeStorage
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.options import RemoteType, TimePosted
 from linkedin_web_scraper.infra.logging import resolve_logger
 from linkedin_web_scraper.infra.paths import resolve_jobs_output_path
 from linkedin_web_scraper.infra.storage.file_manager import FileManager
+from linkedin_web_scraper.infra.storage.sqlite import SQLiteScrapeStorage
 
 DEFAULT_DAILY_CITIES: tuple[str, ...] = ("Monterrey", "Guadalajara", "Mexico City")
 DEFAULT_REMOTE_TYPES: tuple[RemoteType, ...] = (
@@ -34,7 +36,7 @@ def resolve_output_path(file_name: str | Path, output_dir: str | Path | None = N
 
 
 class DailyScrapeService:
-    """Coordinate city-level daily scrapes and aggregated CSV exports."""
+    """Coordinate city-level daily scrapes, persistence, and CSV exports."""
 
     def __init__(
         self,
@@ -43,11 +45,14 @@ class DailyScrapeService:
         scraper_cls=LinkedInJobScraper,
         config_factory=JobScraperConfigFactory,
         file_manager_cls=FileManager,
+        storage: ScrapeStorage | None = None,
+        storage_cls=SQLiteScrapeStorage,
     ):
         self.logger = resolve_logger(logger, name=__name__)
         self.scraper_cls = scraper_cls
         self.config_factory = config_factory
         self.file_manager_cls = file_manager_cls
+        self.storage = storage or storage_cls(logger=self.logger)
 
     def run_for_location(
         self,
@@ -64,19 +69,6 @@ class DailyScrapeService:
         """Run the configured scrape for one location across remote variants."""
         self.logger.info("Starting web scraping for %s in %s.", position, location)
 
-        scraper_results: list[pd.DataFrame] = []
-        for remote in remote_types:
-            config = self.config_factory.create(
-                position=position,
-                location=location,
-                openai_enabled=openai_enabled,
-                time_posted=time_posted,
-                remote=remote,
-            )
-            scraper = self.scraper_cls(logger=self.logger, config=config)
-            scraper_results.append(scraper.run())
-
-        combined_jobs = pd.concat(scraper_results, ignore_index=True)
         file_manager_config = self.config_factory.create(
             position=position,
             location=location,
@@ -89,17 +81,56 @@ class DailyScrapeService:
             file_manager_config,
             output_dir=output_dir,
         )
+        target_output_path = resolve_output_path(
+            file_name or file_manager.generate_file_name(),
+            output_dir,
+        )
+        run_context = ScrapeRunContext(
+            position=position,
+            location=location,
+            openai_enabled=openai_enabled,
+            time_posted=str(time_posted),
+            remote_types=tuple(str(remote) for remote in remote_types),
+            output_path=target_output_path,
+        )
+        run_id = self.storage.begin_run(run_context)
 
-        if file_name is not None:
+        try:
+            scraper_results: list[pd.DataFrame] = []
+            for remote in remote_types:
+                config = self.config_factory.create(
+                    position=position,
+                    location=location,
+                    openai_enabled=openai_enabled,
+                    time_posted=time_posted,
+                    remote=remote,
+                )
+                scraper = self.scraper_cls(logger=self.logger, config=config)
+                scraper_results.append(scraper.run())
+
+            combined_jobs = pd.concat(scraper_results, ignore_index=True)
+            self.storage.store_jobs(run_id, combined_jobs)
+            persisted_jobs = self.storage.load_run_jobs(run_id)
             file_manager.save_jobs_to_csv(
-                df=combined_jobs,
-                file_name=resolve_output_path(file_name, output_dir),
+                df=persisted_jobs,
+                file_name=target_output_path,
                 append=append,
             )
-        else:
-            file_manager.save_jobs_to_csv(df=combined_jobs, append=append)
-
-        return combined_jobs
+            self.storage.finish_run(
+                run_id,
+                status="completed",
+                output_path=target_output_path,
+                row_count=len(persisted_jobs),
+            )
+            return persisted_jobs
+        except Exception as error:
+            self.storage.finish_run(
+                run_id,
+                status="failed",
+                output_path=target_output_path,
+                error_message=str(error),
+            )
+            raise
 
     def run_daily(
         self,
@@ -138,9 +169,26 @@ class DailyScrapeService:
         combined_jobs = pd.concat(city_frames, ignore_index=True)
         output_name = combined_file_name or format_jobs_output_name(position, "Mexico")
         combined_output_path = resolve_output_path(output_name, output_dir)
-        combined_jobs.to_csv(combined_output_path, index=False)
+        combined_config = self.config_factory.create(
+            position=position,
+            location="Mexico",
+            openai_enabled=openai_enabled,
+            time_posted=time_posted,
+            remote=RemoteType.ALL,
+        )
+        combined_file_manager = self.file_manager_cls(
+            self.logger,
+            combined_config,
+            output_dir=output_dir,
+        )
+        combined_file_manager.save_jobs_to_csv(
+            df=combined_jobs,
+            file_name=combined_output_path,
+            append=False,
+        )
         self.logger.info("Saved the final concatenated jobs data to %s.", combined_output_path)
         self.logger.info(
             "Web scraping for all cities completed in %.2f seconds.", perf_counter() - overall_start
         )
         return combined_jobs
+

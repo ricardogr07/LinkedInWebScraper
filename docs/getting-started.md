@@ -57,7 +57,42 @@ config = JobScraperConfig(
 )
 ```
 
-Set `OPENAI_API_KEY` in the environment before running the scraper. The library does not load `.env` files during import. If enrichment setup fails, the scraper returns the base cleaned dataset instead of aborting the full run.
+Set `OPENAI_API_KEY` in the environment before running the scraper. The library does not load `.env` files during import.
+
+For the current PowerShell session on Windows:
+
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+python example_openai.py
+```
+
+To persist the key for your Windows user account without putting it in the repo:
+
+```powershell
+[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-...", "User")
+```
+
+If enrichment setup fails, the scraper returns the base cleaned dataset instead of aborting the full run.
+
+## Persist Daily Runs To SQLite
+
+`DailyScrapeService` now persists run state to SQLite by default.
+
+- managed database path: `artifacts/state/linkedin_jobs.sqlite`
+- managed CSV paths: `artifacts/jobs/`
+- managed log paths: `artifacts/logs/`
+
+To use a custom local SQLite file:
+
+```python
+from linkedin_web_scraper import DailyScrapeService, SQLiteScrapeStorage, build_sqlite_storage_url
+
+service = DailyScrapeService(
+    storage=SQLiteScrapeStorage(
+        storage_url=build_sqlite_storage_url("jobs-dev.sqlite"),
+    )
+)
+```
 
 ## Run The Example Scripts
 
@@ -66,6 +101,7 @@ These compatibility-oriented scripts remain useful during the modernization:
 ```bash
 python example.py
 python example_advanced_config.py
+python example_openai.py
 ```
 
 ## Run The Daily Workflow
@@ -76,13 +112,13 @@ The current scheduled-job entrypoint is still `main.py`:
 python main.py
 ```
 
-That workflow uses `DailyScrapeService` under the hood and writes city-level plus combined CSV outputs to `artifacts/jobs/` by default.
+That workflow uses `DailyScrapeService` under the hood and writes city-level plus combined CSV outputs to `artifacts/jobs/` and persistent state to `artifacts/state/linkedin_jobs.sqlite` by default.
 
 ## Migration Guidance
 
 - Prefer imports from `linkedin_web_scraper` in new code.
 - Keep existing legacy imports only when you are explicitly validating backward compatibility.
-- Treat `example.py` and `main.py` as compatibility-sensitive smoke paths during refactors.
+- Treat `example.py`, `example_openai.py`, and `main.py` as compatibility-sensitive smoke paths during refactors.
 
 ## Validate Local Changes
 
@@ -97,5 +133,5 @@ python -m mkdocs build --strict
 For the currently enforced type-check seam, run:
 
 ```bash
-python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py
+python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/storage.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/application/storage.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py src/linkedin_web_scraper/infra/storage/models.py src/linkedin_web_scraper/infra/storage/sqlite.py
 ```

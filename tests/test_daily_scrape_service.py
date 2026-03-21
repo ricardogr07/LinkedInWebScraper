@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import shutil
 from pathlib import Path
-from unittest.mock import patch
 
 import pandas as pd
 
@@ -12,6 +11,7 @@ from linkedin_web_scraper.application.daily_scrape_service import (
     format_jobs_output_name,
     resolve_output_path,
 )
+from linkedin_web_scraper.application.storage import ScrapeRunContext
 from linkedin_web_scraper.config.options import RemoteType
 from linkedin_web_scraper.infra import paths
 
@@ -29,6 +29,7 @@ class FakeScraper:
                     "Title": "Data Scientist",
                     "Location": self.config.location,
                     "Remote": str(self.config.remote),
+                    "JobID": f"{self.config.location}-{self.config.remote}",
                 }
             ]
         )
@@ -52,6 +53,42 @@ class FakeFileManager:
             "config_remote": str(self.config.remote),
             "output_dir": self.output_dir,
         }
+
+
+class FakeStorage:
+    def __init__(self):
+        self.begin_contexts: list[ScrapeRunContext] = []
+        self.stored_frames: dict[str, pd.DataFrame] = {}
+        self.finished_calls: list[dict[str, object]] = []
+
+    def begin_run(self, context: ScrapeRunContext) -> str:
+        self.begin_contexts.append(context)
+        return f"run-{len(self.begin_contexts)}"
+
+    def store_jobs(self, run_id: str, df_jobs: pd.DataFrame) -> None:
+        self.stored_frames[run_id] = df_jobs.copy()
+
+    def load_run_jobs(self, run_id: str) -> pd.DataFrame:
+        return self.stored_frames[run_id].assign(Persisted=True)
+
+    def finish_run(
+        self,
+        run_id: str,
+        *,
+        status: str = "completed",
+        output_path: str | None = None,
+        error_message: str | None = None,
+        row_count: int | None = None,
+    ) -> None:
+        self.finished_calls.append(
+            {
+                "run_id": run_id,
+                "status": status,
+                "output_path": output_path,
+                "error_message": error_message,
+                "row_count": row_count,
+            }
+        )
 
 
 def _reset_test_directory(path: Path) -> Path:
@@ -92,16 +129,18 @@ def test_resolve_output_path_defaults_to_managed_jobs_directory(monkeypatch):
     shutil.rmtree(managed_dir)
 
 
-def test_daily_scrape_service_combines_remote_runs_and_saves_to_output_dir():
-    logger = logging.getLogger("phase3-daily-service")
+def test_daily_scrape_service_combines_remote_runs_persists_and_saves_output_dir():
+    logger = logging.getLogger("phase6-daily-service")
     logger.handlers.clear()
     logger.addHandler(logging.NullHandler())
     FakeFileManager.saved_call = None
+    fake_storage = FakeStorage()
 
     service = DailyScrapeService(
         logger=logger,
         scraper_cls=FakeScraper,
         file_manager_cls=FakeFileManager,
+        storage=fake_storage,
     )
 
     output_dir = _reset_test_directory(TEST_TMP_ROOT / "service-output")
@@ -113,18 +152,23 @@ def test_daily_scrape_service_combines_remote_runs_and_saves_to_output_dir():
         str(RemoteType.HYBRID),
         str(RemoteType.ON_SITE),
     ]
-    assert FakeFileManager.saved_call["file_name"] is None
+    assert combined["Persisted"].tolist() == [True, True, True]
     assert FakeFileManager.saved_call["output_dir"] == output_dir
     assert FakeFileManager.saved_call["config_remote"] == str(RemoteType.ALL)
+    assert FakeFileManager.saved_call["df"]["Persisted"].tolist() == [True, True, True]
+    assert fake_storage.begin_contexts[0].location == "Monterrey"
+    assert fake_storage.finished_calls[0]["status"] == "completed"
+    assert fake_storage.finished_calls[0]["row_count"] == 3
 
     shutil.rmtree(output_dir)
 
 
 def test_daily_scrape_service_defaults_named_outputs_to_managed_directory(monkeypatch):
-    logger = logging.getLogger("phase3-daily-service-default-output")
+    logger = logging.getLogger("phase6-daily-service-default-output")
     logger.handlers.clear()
     logger.addHandler(logging.NullHandler())
     FakeFileManager.saved_call = None
+    fake_storage = FakeStorage()
     managed_dir = _reset_test_directory(TEST_TMP_ROOT / "named-managed-jobs")
     monkeypatch.setattr(paths, "DEFAULT_JOBS_OUTPUT_DIR", managed_dir)
 
@@ -132,19 +176,22 @@ def test_daily_scrape_service_defaults_named_outputs_to_managed_directory(monkey
         logger=logger,
         scraper_cls=FakeScraper,
         file_manager_cls=FakeFileManager,
+        storage=fake_storage,
     )
 
     service.run_for_location(location="Monterrey", file_name="custom.csv")
 
     assert FakeFileManager.saved_call["file_name"] == str(managed_dir / "custom.csv")
+    assert fake_storage.begin_contexts[0].output_path == str(managed_dir / "custom.csv")
 
     shutil.rmtree(managed_dir)
 
 
-def test_run_daily_defaults_combined_output_to_managed_directory(monkeypatch):
-    logger = logging.getLogger("phase3-daily-service-run-daily")
+def test_run_daily_saves_combined_output_through_file_manager(monkeypatch):
+    logger = logging.getLogger("phase6-daily-service-run-daily")
     logger.handlers.clear()
     logger.addHandler(logging.NullHandler())
+    fake_storage = FakeStorage()
     managed_dir = _reset_test_directory(TEST_TMP_ROOT / "combined-managed-jobs")
     monkeypatch.setattr(paths, "DEFAULT_JOBS_OUTPUT_DIR", managed_dir)
 
@@ -152,16 +199,15 @@ def test_run_daily_defaults_combined_output_to_managed_directory(monkeypatch):
         logger=logger,
         scraper_cls=FakeScraper,
         file_manager_cls=FakeFileManager,
+        storage=fake_storage,
     )
 
-    with patch("pandas.DataFrame.to_csv") as to_csv_mock:
-        combined = service.run_daily(cities=("Monterrey",))
+    combined = service.run_daily(cities=("Monterrey",))
 
     assert combined.shape[0] == 3
-    to_csv_mock.assert_called_once_with(
-        str(managed_dir / "LinkedIn_Jobs_Data_Scientist_Mexico.csv"),
-        index=False,
+    assert FakeFileManager.saved_call["file_name"] == str(
+        managed_dir / "LinkedIn_Jobs_Data_Scientist_Mexico.csv"
     )
+    assert FakeFileManager.saved_call["append"] is False
 
     shutil.rmtree(managed_dir)
-

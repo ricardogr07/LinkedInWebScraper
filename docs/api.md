@@ -6,6 +6,8 @@
 
 ::: linkedin_web_scraper.application.daily_scrape_service
 
+::: linkedin_web_scraper.application.storage
+
 ## Configuration
 
 ::: linkedin_web_scraper.config.job_scraper_config
@@ -15,6 +17,8 @@
 ::: linkedin_web_scraper.config.job_scraper_config_factory
 
 ::: linkedin_web_scraper.config.openai
+
+::: linkedin_web_scraper.config.storage
 
 ::: linkedin_web_scraper.config.options
 
@@ -45,3 +49,9 @@
 ::: linkedin_web_scraper.infra.openai.openai_handler
 
 ::: linkedin_web_scraper.infra.openai.job_description_processor
+
+## Storage
+
+::: linkedin_web_scraper.infra.storage.models
+
+::: linkedin_web_scraper.infra.storage.sqlite

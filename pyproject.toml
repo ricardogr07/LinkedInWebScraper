@@ -13,7 +13,7 @@ license-files = ["LICENSE"]
 authors = [
   { name = "Ricardo Garcia Ramirez", email = "rgr.5882@gmail.com" },
 ]
-keywords = ["linkedin", "scraper", "jobs", "openai", "pandas"]
+keywords = ["linkedin", "scraper", "jobs", "openai", "pandas", "sqlite"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -30,6 +30,7 @@ dependencies = [
   "numpy>=1.26.4",
   "pandas>=2.2.0",
   "requests>=2.31.0",
+  "SQLAlchemy>=2.0.36",
 ]
 
 [project.optional-dependencies]
@@ -110,9 +111,11 @@ project-includes = [
   "src/linkedin_web_scraper/config/job_scraper_advanced_config.py",
   "src/linkedin_web_scraper/config/job_scraper_config_factory.py",
   "src/linkedin_web_scraper/config/openai.py",
+  "src/linkedin_web_scraper/config/storage.py",
   "src/linkedin_web_scraper/config/options.py",
   "src/linkedin_web_scraper/application/daily_scrape_service.py",
   "src/linkedin_web_scraper/application/linkedin_job_scraper.py",
+  "src/linkedin_web_scraper/application/storage.py",
   "src/linkedin_web_scraper/domain/job_data_cleaner.py",
   "src/linkedin_web_scraper/domain/job_title_classifier.py",
   "src/linkedin_web_scraper/infra/logging.py",
@@ -123,6 +126,8 @@ project-includes = [
   "src/linkedin_web_scraper/infra/openai/models.py",
   "src/linkedin_web_scraper/infra/openai/openai_handler.py",
   "src/linkedin_web_scraper/infra/openai/job_description_processor.py",
+  "src/linkedin_web_scraper/infra/storage/models.py",
+  "src/linkedin_web_scraper/infra/storage/sqlite.py",
 ]
 search-path = ["src"]
 python-version = "3.11"

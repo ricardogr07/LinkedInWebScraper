@@ -6,6 +6,7 @@ from pathlib import Path
 DEFAULT_ARTIFACTS_DIR = Path("artifacts")
 DEFAULT_JOBS_OUTPUT_DIR = DEFAULT_ARTIFACTS_DIR / "jobs"
 DEFAULT_LOGS_DIR = DEFAULT_ARTIFACTS_DIR / "logs"
+DEFAULT_STATE_DIR = DEFAULT_ARTIFACTS_DIR / "state"
 
 
 def _resolve_managed_path(
@@ -43,10 +44,20 @@ def resolve_log_path(
     return _resolve_managed_path(file_name, log_dir or DEFAULT_LOGS_DIR)
 
 
+def resolve_state_path(
+    file_name: str | Path,
+    state_dir: str | Path | None = None,
+) -> str:
+    """Resolve a state or database path under the managed state directory by default."""
+    return _resolve_managed_path(file_name, state_dir or DEFAULT_STATE_DIR)
+
+
 __all__ = [
     "DEFAULT_ARTIFACTS_DIR",
     "DEFAULT_JOBS_OUTPUT_DIR",
     "DEFAULT_LOGS_DIR",
+    "DEFAULT_STATE_DIR",
     "resolve_jobs_output_path",
     "resolve_log_path",
+    "resolve_state_path",
 ]

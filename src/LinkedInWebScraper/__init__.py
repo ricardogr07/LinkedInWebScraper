@@ -1,5 +1,6 @@
 from linkedin_web_scraper import (
     DATA_SCIENCE_KEYWORDS,
+    DEFAULT_SQLITE_DB_FILE,
     LOCATION_MAPPING,
     REMOTE_OPTION,
     TECH_STACK_CATEGORIES,
@@ -16,6 +17,9 @@ from linkedin_web_scraper import (
     LinkedInJobScraper,
     Logger,
     OpenAIHandler,
+    ScrapeRunContext,
+    SQLiteScrapeStorage,
+    build_sqlite_storage_url,
     fetch_until_success,
     get_random_header,
 )
@@ -32,6 +36,10 @@ __all__ = [
     "JobDescriptionProcessor",
     "JobDataCleaner",
     "JobTitleClassifier",
+    "ScrapeRunContext",
+    "build_sqlite_storage_url",
+    "SQLiteScrapeStorage",
+    "DEFAULT_SQLITE_DB_FILE",
     "get_random_header",
     "fetch_until_success",
     "OpenAIHandler",

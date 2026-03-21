@@ -1,6 +1,6 @@
 # Configuration
 
-This project currently uses programmatic configuration objects. TOML-driven runtime configuration is planned later, but the library surface today is centered on typed Python models.
+This project currently uses programmatic configuration objects. TOML-driven runtime configuration is planned later, but the library surface today is centered on typed Python models and injectable runtime services.
 
 ## `JobScraperConfig`
 
@@ -44,24 +44,27 @@ OpenAI support is optional.
 - Enrichment uses the configured `openai_model` and is best-effort; failures fall back to the non-enriched dataset
 - Enriched rows include `OpenAIModel`, `OpenAIResponseId`, and `OpenAIRawPayload` for audit/debug visibility
 
-## Artifact Paths
+## Artifact And State Paths
 
 By default, managed outputs resolve under `artifacts/`:
 
 - bare CSV file names go to `artifacts/jobs/`
 - bare log file names go to `artifacts/logs/`
+- bare SQLite/state file names go to `artifacts/state/`
 
 Explicit absolute paths and explicit nested relative paths are preserved as given.
 
 ## Current Storage Model
 
-Phase 5 still uses filesystem-backed artifacts as the default persistence model:
+Phase 6 uses SQLite-backed persistence by default through `DailyScrapeService`.
 
-- CSV exports are the current reusable job-data output
-- logs are written alongside other managed artifacts
-- no database migration is required to run the current library locally
+- `scrape_runs` tracks run lifecycle metadata and output paths
+- `jobs` stores the latest canonical attributes for each `JobID`
+- `job_snapshots` stores the row-level dataframe payload for each run
+- `job_enrichments` stores structured OpenAI audit data when enrichment is present
+- CSV exports are written from persisted run data after storage succeeds
 
-A database-backed storage layer is planned later, but it is intentionally deferred until after the canonical runtime and offline validation story are stable.
+Use `build_sqlite_storage_url()` for a managed default SQLite URL, or inject `SQLiteScrapeStorage(storage_url=...)` into `DailyScrapeService` when you need a custom local database path.
 
 ## Daily Runs
 
@@ -71,7 +74,7 @@ A database-backed storage layer is planned later, but it is intentionally deferr
 - `HYBRID`
 - `ON-SITE`
 
-You can override the city list, position, output directory, and combined output file name without changing the lower-level scraper classes.
+You can override the city list, position, output directory, combined output file name, or the injected storage adapter without changing the lower-level scraper classes.
 
 ## Migration Notes
 

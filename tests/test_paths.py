@@ -1,10 +1,14 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import shutil
 from pathlib import Path
 
 import linkedin_web_scraper.infra.paths as paths
-from linkedin_web_scraper.infra.paths import resolve_jobs_output_path, resolve_log_path
+from linkedin_web_scraper.infra.paths import (
+    resolve_jobs_output_path,
+    resolve_log_path,
+    resolve_state_path,
+)
 
 TEST_TMP_ROOT = Path(".tmp") / "artifact-path-tests"
 
@@ -52,3 +56,14 @@ def test_resolve_log_path_defaults_to_managed_directory(monkeypatch):
 
     shutil.rmtree(managed_dir)
 
+
+def test_resolve_state_path_defaults_to_managed_directory(monkeypatch):
+    managed_dir = _reset_directory(TEST_TMP_ROOT / "state")
+    monkeypatch.setattr(paths, "DEFAULT_STATE_DIR", managed_dir)
+
+    resolved = resolve_state_path("jobs.sqlite")
+
+    assert resolved == str(managed_dir / "jobs.sqlite")
+    assert managed_dir.exists()
+
+    shutil.rmtree(managed_dir)

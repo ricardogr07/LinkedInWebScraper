@@ -42,9 +42,10 @@ The baseline compatibility smoke checks are:
 
 ## When Storage Changes
 
-- run migration tests
+- run SQLite storage adapter tests and daily-service persistence/export tests
 - verify persistence works with the configured SQLite path
 - verify export artifacts are still generated from persisted state
+- verify managed database paths resolve under `artifacts/state/` by default
 
 ## Commit Rule
 
