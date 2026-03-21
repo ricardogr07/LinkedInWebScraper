@@ -9,7 +9,7 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 - `release.yml`: builds distributions and publishes them to TestPyPI and/or PyPI with trusted publishing.
 - `daily-scrape.yml`: runs the scheduled multi-city scrape, preserves SQLite state on the `data` branch, uploads artifacts, and opens a failure issue when the automation breaks.
 
-## Required Repository Settings
+## One-Time GitHub Setup
 
 ### GitHub Pages
 
@@ -18,7 +18,10 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 
 ### Trusted Publishing
 
-Create GitHub environments named `testpypi` and `pypi`, then configure trusted publishers in both package indexes so they trust `.github/workflows/release.yml` from this repository.
+- Create GitHub environments named `testpypi` and `pypi` if you want environment-level approval or separation.
+- Configure trusted publishers in TestPyPI and PyPI so they trust `.github/workflows/release.yml` from this repository.
+- No PyPI username/password or API token secret is required when trusted publishing is enabled.
+- If you choose token-based publishing instead, that is a separate workflow path.
 
 Recommended release posture:
 
@@ -31,6 +34,11 @@ Recommended release posture:
 - The scheduled scrape reads `.github/runtime/daily.toml`.
 - Optional OpenAI use still requires `OPENAI_API_KEY` as a repository secret.
 - The workflow keeps OpenAI disabled by default in TOML so the scheduled run stays resilient without external API dependencies.
+
+### Repository Permissions
+
+- Allow GitHub Actions to push to the `data` branch so the scheduled workflow can commit state.
+- Keep the `contents: write` and `issues: write` permissions in the workflow file.
 
 ## CI Flow
 

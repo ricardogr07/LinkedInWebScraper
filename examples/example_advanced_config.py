@@ -1,4 +1,4 @@
-from LinkedInWebScraper import (
+from linkedin_web_scraper import (
     JobScraperAdvancedConfig,
     JobScraperConfig,
     LinkedInJobScraper,

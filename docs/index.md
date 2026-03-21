@@ -14,12 +14,12 @@ LinkedInWebScraper provides a reusable workflow for scraping LinkedIn job listin
 
 ## Runtime Surfaces
 
-The project now has two supported runtime modes:
+The project has two supported runtime modes:
 
 - Programmatic library usage through `JobScraperConfig`, `LinkedInJobScraper`, and `DailyScrapeService`
 - TOML-driven CLI usage through `linkedin-webscraper scrape once`, `scrape daily`, and `export`
 
-The root scripts remain compatibility wrappers:
+The root scripts remain available for direct execution:
 
 - `python main.py` -> default daily run
 - `python process_ds_jobs.py` -> default single-location run

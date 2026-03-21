@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 TIME_POSTED_OPTION = {"ALL": "", "MONTH": "r2592000", "WEEK": "r604800", "DAY": "r86400"}
 

@@ -1,4 +1,4 @@
-﻿"""Command-line entrypoints for runtime-configured scrape workflows."""
+"""Command-line entrypoints for runtime-configured scrape workflows."""
 
 from __future__ import annotations
 

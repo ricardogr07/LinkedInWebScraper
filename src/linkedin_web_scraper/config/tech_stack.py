@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 TECH_STACK_CATEGORIES = {
     "Agile Methodologies": ["Scrum", "SAFe", "Agile", "Agile SDLC", "Kanban", "Agile"],

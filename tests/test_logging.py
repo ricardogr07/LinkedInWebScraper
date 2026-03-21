@@ -9,11 +9,11 @@ from pathlib import Path
 import linkedin_web_scraper.infra.paths as paths
 from linkedin_web_scraper.infra.logging import (
     PACKAGE_LOGGER_NAME,
+    Logger,
     configure_logging,
     get_logger,
     resolve_logger,
 )
-from Utils.logger import Logger
 
 TEST_TMP_ROOT = Path(".tmp") / "logger-tests"
 
@@ -72,4 +72,3 @@ def test_resolve_logger_prefers_wrapped_log():
     wrapper = type("Wrapper", (), {"log": wrapped_logger})()
 
     assert resolve_logger(wrapper, name="ignored") is wrapped_logger
-

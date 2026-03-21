@@ -27,16 +27,19 @@ def test_required_workflow_files_exist() -> None:
     assert not missing, f"Missing workflow assets: {missing}"
 
 
-def test_ci_workflow_uses_tox_matrix_and_compat_smoke() -> None:
+def test_ci_workflow_uses_tox_matrix_and_canonical_smoke() -> None:
     text = _read(".github/workflows/ci.yml")
     assert "branches-ignore:" in text
     assert "- data" in text
     assert "python -m tox -e" in text
     assert "py311" in text
     assert "py314" in text
-    assert "compat-smoke" in text
+    assert "smoke" in text
     assert "tests/test_example_smoke.py" in text
-    assert "tests/test_namespace_compatibility.py" in text
+    assert "tests/test_example_advanced_config_smoke.py" in text
+    assert "tests/test_example_openai_smoke.py" in text
+    assert "tests/test_main_smoke.py" in text
+    assert "tests/test_process_ds_jobs_smoke.py" in text
     assert "lint" in text
     assert "type" in text
     assert "docs" in text

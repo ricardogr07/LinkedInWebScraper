@@ -5,13 +5,12 @@ LinkedInWebScraper is a production-minded Python library and scheduled job runne
 ## Highlights
 
 - Canonical package namespace under `linkedin_web_scraper`
-- Typed programmatic config for single scrapes and TOML runtime config for CLI/scheduled runs
+- Typed programmatic config for single scrapes and TOML runtime config for CLI and scheduled runs
 - Managed artifacts under `artifacts/jobs`, `artifacts/logs`, and `artifacts/state`
 - SQLite-backed persistence through a clean application storage port
 - Package CLI with `scrape once`, `scrape daily`, `export`, and `--dry-run`
 - Optional OpenAI enrichment built on the current Responses API
 - Runnable examples under `examples/`
-- Backward-compatible wrappers for `LinkedInWebScraper`, `Utils`, `OpenAIHandler`, `main.py`, and `process_ds_jobs.py`
 
 ## Install
 
@@ -62,7 +61,12 @@ linkedin-webscraper scrape daily
 linkedin-webscraper export --run-id <run-id>
 ```
 
-Use `runtime.example.toml` as the template for a real `runtime.toml`. The compatibility wrappers `python main.py` and `python process_ds_jobs.py` still default to the daily and once workflows.
+Use `runtime.example.toml` as the template for a real `runtime.toml`. The root runtime scripts remain available for the daily and once workflows:
+
+```bash
+python main.py
+python process_ds_jobs.py
+```
 
 ## Docs
 

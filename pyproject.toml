@@ -71,7 +71,7 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["linkedin_web_scraper*", "LinkedInWebScraper*", "Utils*", "OpenAIHandler*"]
+include = ["linkedin_web_scraper*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -p no:cacheprovider"
@@ -79,9 +79,6 @@ testpaths = ["tests"]
 markers = [
   "live_linkedin: tests that hit LinkedIn or related live HTTP endpoints",
   "live_openai: tests that hit the OpenAI API",
-]
-filterwarnings = [
-  "ignore:.*Import from `linkedin_web_scraper` instead\\.:DeprecationWarning",
 ]
 
 [tool.ruff]
@@ -134,3 +131,4 @@ project-includes = [
 search-path = ["src"]
 python-version = "3.11"
 use-ignore-files = true
+

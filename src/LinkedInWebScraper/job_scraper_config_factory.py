@@ -1,6 +1,0 @@
-from linkedin_web_scraper._compat import warn_legacy_namespace
-from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
-
-warn_legacy_namespace("LinkedInWebScraper.job_scraper_config_factory")
-
-__all__ = ["JobScraperConfigFactory"]

@@ -1,6 +1,6 @@
-﻿# Configuration
+# Configuration
 
-This project now supports both typed programmatic config and TOML-driven runtime config.
+This project supports typed programmatic config and TOML-driven runtime config.
 
 ## Programmatic Library Config
 
@@ -122,8 +122,6 @@ SQLite persistence is enabled by default for CLI and `DailyScrapeService` workfl
 
 Use `build_sqlite_storage_url()` for a managed default URL, or inject `SQLiteScrapeStorage(storage_url=...)` into `DailyScrapeService` when you need a custom local path or DSN.
 
-## Compatibility Notes
+## Root Runtime Scripts
 
-- New code should import from `linkedin_web_scraper`
-- Runtime TOML is for CLI and scheduled jobs, not required for library use
-- `main.py` and `process_ds_jobs.py` remain compatibility wrappers over the canonical CLI/service layer
+`main.py` and `process_ds_jobs.py` remain available as direct runtime entrypoints for the daily and once workflows.

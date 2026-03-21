@@ -1,4 +1,4 @@
-﻿"""SQLAlchemy models for persisted scrape runs and job snapshots."""
+"""SQLAlchemy models for persisted scrape runs and job snapshots."""
 
 from __future__ import annotations
 

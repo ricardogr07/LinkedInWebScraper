@@ -1,4 +1,4 @@
-﻿"""Application-layer services and storage contracts exposed by the canonical package."""
+"""Application-layer services and storage contracts exposed by the canonical package."""
 
 from linkedin_web_scraper.application.daily_scrape_service import (
     DEFAULT_DAILY_CITIES,

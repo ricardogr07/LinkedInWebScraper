@@ -106,9 +106,9 @@ python examples/example_advanced_config.py
 python examples/example_openai.py
 ```
 
-## Compatibility Scripts
+## Root Runtime Scripts
 
-The modernization keeps the old root script surfaces working for compatibility:
+The root runtime scripts remain available for direct execution:
 
 ```bash
 python main.py
@@ -123,7 +123,7 @@ By default:
 
 - logs go to `artifacts/logs`
 - CSV exports go to `artifacts/jobs`
-- SQLite state goes to `artifacts/state/linkedin_jobs.sqlite`
+- SQLite state goes to `artifacts/state`
 
 ## Validate Local Changes
 

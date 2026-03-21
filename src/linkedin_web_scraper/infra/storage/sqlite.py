@@ -1,4 +1,4 @@
-﻿"""SQLite-backed storage adapter for persisted scrape runs."""
+"""SQLite-backed storage adapter for persisted scrape runs."""
 
 from __future__ import annotations
 

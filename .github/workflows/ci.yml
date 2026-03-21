@@ -47,8 +47,8 @@ jobs:
       - name: Run ${{ matrix.tox-env }}
         run: python -m tox -e ${{ matrix.tox-env }}
 
-  compat-smoke:
-    name: Compatibility smoke
+  smoke:
+    name: Canonical smoke
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -65,13 +65,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .[openai]
 
-      - name: Run wrapper-sensitive smoke tests
+      - name: Run canonical smoke tests
         run: >-
           python -m pytest -q
           tests/test_example_smoke.py
+          tests/test_example_advanced_config_smoke.py
+          tests/test_example_openai_smoke.py
           tests/test_main_smoke.py
           tests/test_process_ds_jobs_smoke.py
-          tests/test_namespace_compatibility.py
 
   quality:
     name: Quality (${{ matrix.tox-env }})

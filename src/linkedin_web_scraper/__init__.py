@@ -1,4 +1,4 @@
-﻿"""Public package exports for LinkedInWebScraper."""
+"""Public package exports for LinkedInWebScraper."""
 
 from linkedin_web_scraper.application import RuntimeRunner, ScrapeRunContext, ScrapeStorage
 from linkedin_web_scraper.application.daily_scrape_service import (

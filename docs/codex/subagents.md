@@ -16,7 +16,7 @@ Use subagents to parallelize well-scoped work, not to outsource integration deci
 ## When To Delegate
 - Add or tighten regression tests while the main agent works on implementation.
 - Draft documentation while the main agent validates tooling.
-- Build packaging, release, or compatibility artifacts in a disjoint area of the repo.
+- Build packaging, release, or storage artifacts in a disjoint area of the repo.
 - Review a narrow subsystem before a larger refactor.
 
 ## When Not To Delegate
@@ -41,11 +41,6 @@ Use subagents to parallelize well-scoped work, not to outsource integration deci
 - Purpose: own build metadata, packaging config, wheel validation, and release-oriented documentation.
 - Write scope: `pyproject.toml`, `tox.toml`, `setup.py`, and release docs.
 - Use when: changing dependency management, package metadata, build commands, or publication flow.
-
-### `compat_shims`
-- Purpose: own deprecated imports, wrappers, and migration support around the public API.
-- Write scope: legacy import surfaces and compatibility notes.
-- Use when: moving modules or introducing the canonical package while preserving old imports.
 
 ### `storage_migrations`
 - Purpose: own persistence adapters, schema migrations, and export/state contracts.

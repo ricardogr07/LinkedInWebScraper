@@ -1,4 +1,4 @@
-﻿"""Application-level runtime helpers for CLI and scheduled executions."""
+"""Application-level runtime helpers for CLI and scheduled executions."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 USER_AGENT_HEADERS = [
     {"User-Agent": "Mozilla/5.0"},

@@ -1,4 +1,4 @@
-from LinkedInWebScraper import JobScraperConfig, LinkedInJobScraper, Logger
+from linkedin_web_scraper import JobScraperConfig, LinkedInJobScraper, Logger
 
 logger = Logger("example.log")
 

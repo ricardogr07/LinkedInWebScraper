@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -6,16 +8,15 @@ import pandas as pd
 import pytest
 
 import linkedin_web_scraper.infra.paths as paths
-from LinkedInWebScraper.job_scraper_config import JobScraperConfig
-from Utils.file_manager import FileManager
-from Utils.logger import Logger
+from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
+from linkedin_web_scraper.infra.storage.file_manager import FileManager
 
-TEST_TMP_ROOT = Path(".tmp") / "phase3-file-manager-tests"
+TEST_TMP_ROOT = Path(".tmp") / "file-manager-tests"
 
 
 @pytest.fixture
 def logger():
-    mock_logger = MagicMock(Logger)
+    mock_logger = MagicMock()
     mock_logger.log = MagicMock()
     return mock_logger
 
@@ -52,7 +53,7 @@ class TestFileManager:
         assert file_manager.time_posted == config.time_posted
         assert file_manager.remote == config.remote
 
-    @patch("Utils.file_manager.datetime")
+    @patch("linkedin_web_scraper.infra.storage.file_manager.datetime")
     def test_generate_file_name(self, mock_datetime, file_manager):
         mock_datetime.now.return_value = datetime(2024, 9, 15)
         expected_file_name = "LinkedIn_Jobs_Data_Scientist_New_York_LAST_WEEK_REMOTE_2024-09-15.csv"

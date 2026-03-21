@@ -1,15 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import sys
 from pathlib import Path
 
 import pandas as pd
 
+from linkedin_web_scraper import JobScraperConfigFactory, Logger
 from linkedin_web_scraper.application.daily_scrape_service import DailyScrapeService
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 from linkedin_web_scraper.interfaces.cli.main import main as cli_main
-from LinkedInWebScraper.job_scraper_config_factory import JobScraperConfigFactory
-from Utils.logger import Logger
 
 
 def run_ds_daily_scraper(
@@ -22,7 +21,7 @@ def run_ds_daily_scraper(
     file_name: str | None = None,
     output_dir: str | Path | None = None,
 ) -> pd.DataFrame:
-    """Compatibility wrapper for running the legacy daily scrape flow."""
+    """Run the daily scrape flow through the canonical application service."""
     service = DailyScrapeService(logger=logger, config_factory=JobScraperConfigFactory)
     return service.run_for_location(
         position=position,

@@ -36,13 +36,13 @@ class FakeScraper:
 
 
 def test_example_script_smoke(monkeypatch):
-    import LinkedInWebScraper
+    import linkedin_web_scraper
 
     captured = []
 
-    monkeypatch.setattr(LinkedInWebScraper, "Logger", FakeLogger)
-    monkeypatch.setattr(LinkedInWebScraper, "JobScraperConfig", FakeConfig)
-    monkeypatch.setattr(LinkedInWebScraper, "LinkedInJobScraper", FakeScraper)
+    monkeypatch.setattr(linkedin_web_scraper, "Logger", FakeLogger)
+    monkeypatch.setattr(linkedin_web_scraper, "JobScraperConfig", FakeConfig)
+    monkeypatch.setattr(linkedin_web_scraper, "LinkedInJobScraper", FakeScraper)
     monkeypatch.setattr(builtins, "print", lambda *args, **kwargs: captured.append(args))
 
     runpy.run_path(str(ROOT / "examples" / "example.py"), run_name="__main__")

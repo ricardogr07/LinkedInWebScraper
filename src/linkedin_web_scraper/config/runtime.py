@@ -1,4 +1,4 @@
-﻿"""Runtime configuration models and TOML loading helpers for CLI workflows."""
+"""Runtime configuration models and TOML loading helpers for CLI workflows."""
 
 from __future__ import annotations
 

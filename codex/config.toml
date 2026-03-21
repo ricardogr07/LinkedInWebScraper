@@ -98,11 +98,6 @@ purpose = "Own packaging metadata, build config, release workflow docs, and whee
 write_scope = "pyproject.toml, tox.toml, setup.py, release docs"
 use_when = "Changing packaging, build, publish, or environment bootstrap behavior."
 
-[subagents.compat_shims]
-purpose = "Own compatibility wrappers, deprecations, and import migration support."
-write_scope = "legacy package shims and public import surfaces"
-use_when = "Migrating namespaces while keeping current users working."
-
 [subagents.storage_migrations]
 purpose = "Own persistence adapters, migrations, and state-export pathways."
 write_scope = "storage modules, migrations, state/export docs"
@@ -129,7 +124,7 @@ status = "planned"
 purpose = "Guide phased modernization work for this repo with compatibility, validation, and safe refactor sequencing."
 target_responsibilities = [
   "phase-aware migration steps",
-  "compatibility shim guidance",
   "validation and smoke-test sequencing",
   "safe subagent work partitioning",
+  "docs and workflow alignment for each release checkpoint",
 ]

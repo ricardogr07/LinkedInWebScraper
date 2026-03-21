@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 from unittest.mock import MagicMock, patch
@@ -6,7 +6,16 @@ from unittest.mock import MagicMock, patch
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.infra.http.job_scraper import JobScraper
 from linkedin_web_scraper.infra.http.policy import HttpRequestPolicy
-from linkedin_web_scraper.infra.http.utils import fetch_until_success
+from linkedin_web_scraper.infra.http.utils import fetch_until_success, get_random_header
+
+
+def test_get_random_header_uses_supplied_headers():
+    headers = [{"User-Agent": "Mozilla/5.0"}]
+
+    with patch("random.choice", return_value=headers[0]) as mock_random_choice:
+        assert get_random_header(headers) == headers[0]
+
+    mock_random_choice.assert_called_once_with(headers)
 
 
 def test_http_request_policy_supports_overrides():
