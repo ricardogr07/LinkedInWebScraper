@@ -80,5 +80,6 @@ def test_daily_workflow_persists_state_branch_and_artifacts() -> None:
 def test_daily_runtime_config_is_valid_and_uses_managed_paths() -> None:
     config = tomllib.loads(_read(".github/runtime/daily.toml"))
     assert config["storage"]["state_dir"] == "artifacts/state"
+    assert config["scrape"]["daily"]["openai_enabled"] is True
     assert config["scrape"]["daily"]["output_dir"] == "artifacts/jobs"
     assert config["logging"]["file_name"] == "daily-github-actions.log"

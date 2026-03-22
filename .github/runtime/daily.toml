@@ -9,7 +9,7 @@ state_dir = "artifacts/state"
 [scrape.daily]
 cities = ["Monterrey", "Guadalajara", "Mexico City"]
 position = "Data Scientist"
-openai_enabled = false
+openai_enabled = true
 openai_model = "gpt-4o-mini"
 time_posted = "DAY"
 output_dir = "artifacts/jobs"
