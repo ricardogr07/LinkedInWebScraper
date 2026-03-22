@@ -58,6 +58,7 @@ def test_docs_workflow_deploys_pages() -> None:
 def test_release_workflow_uses_auto_release_and_trusted_publishing() -> None:
     text = _read(".github/workflows/release.yml")
     assert "workflow_run:" in text
+    assert "workflow_dispatch:" in text
     assert "- CI" in text
     assert "- Docs" in text
     assert "contents: write" in text
@@ -67,8 +68,8 @@ def test_release_workflow_uses_auto_release_and_trusted_publishing() -> None:
     assert "softprops/action-gh-release@v2" in text
     assert "tag_name:" in text
     assert "target_commitish:" in text
-    assert "testpypi" in text
-    assert "pypi" in text
+    assert "publish_pypi" in text
+    assert "testpypi" not in text
 
 
 def test_daily_workflow_persists_state_branch_and_artifacts() -> None:

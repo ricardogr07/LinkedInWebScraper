@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/ci.yml/badge.svg)](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/ci.yml)
 [![Docs](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/docs.yml/badge.svg)](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/docs.yml)
+[![Docs site](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://ricardogr07.github.io/LinkedInWebScraper/)
 [![Release](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/release.yml/badge.svg)](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/release.yml)
 [![PyPI version](https://img.shields.io/pypi/v/LinkedInWebScraper.svg)](https://pypi.org/project/LinkedInWebScraper/)
 [![Python versions](https://img.shields.io/pypi/pyversions/LinkedInWebScraper.svg)](https://pypi.org/project/LinkedInWebScraper/)

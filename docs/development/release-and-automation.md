@@ -6,7 +6,7 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 
 - `ci.yml`: runs the tox matrix on every push and pull request.
 - `docs.yml`: builds MkDocs and deploys the generated site to GitHub Pages on pushes to `main` and on manual dispatch.
-- `release.yml`: auto-triggers from successful CI and Docs runs on `main`, creates the GitHub Release object, and publishes to TestPyPI and/or PyPI with trusted publishing.
+- `release.yml`: auto-triggers from successful CI and Docs runs on `main`, creates the GitHub Release object, and publishes to PyPI with trusted publishing.
 - `daily-scrape.yml`: runs the scheduled multi-city scrape, preserves SQLite state on the `data` branch, uploads artifacts, and opens a failure issue when the automation breaks.
 
 ## One-Time GitHub Setup
@@ -18,14 +18,14 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 
 ### Trusted Publishing
 
-- Create GitHub environments named `testpypi` and `pypi` if you want environment-level approval or separation.
-- Configure trusted publishers in TestPyPI and PyPI so they trust `.github/workflows/release.yml` from this repository.
+- Create a GitHub environment named `pypi` if you want environment-level approval or separation.
+- Configure a trusted publisher in PyPI so it trusts `.github/workflows/release.yml` from this repository.
 - No PyPI username/password or API token secret is required when trusted publishing is enabled.
 - If you choose token-based publishing instead, that is a separate workflow path.
 
 Recommended release posture:
 
-- use `workflow_dispatch` for TestPyPI dry runs or manual recovery
+- use `workflow_dispatch` for controlled PyPI recovery or manual release runs from `main`
 - let the `workflow_run` path publish automatically when the version in `pyproject.toml` increases and both CI and Docs are green on `main`
 - create the GitHub Release object before the PyPI publish step
 
@@ -68,7 +68,7 @@ The workflow is intentionally limited to `main` pushes and manual dispatch so pr
 `release.yml` now supports two release paths:
 
 - `workflow_run` on `CI` and `Docs` completions for automatic PyPI releases from `main`
-- `workflow_dispatch` for `testpypi`, `pypi`, or `both`
+- `workflow_dispatch` for controlled PyPI recovery or release reruns
 
 The automated release job sequence is:
 
@@ -79,7 +79,7 @@ The automated release job sequence is:
 5. create the GitHub Release object and upload the built wheel and sdist
 6. publish the same built artifacts to PyPI with trusted publishing
 
-Manual TestPyPI publishing still uses the same build artifact, but it does not create a GitHub Release object.
+Manual dispatch uses the same artifact flow, but it still respects the version gate so duplicate releases are skipped.
 
 ### Rollback
 
@@ -87,7 +87,7 @@ PyPI does not allow overwriting a released version.
 
 Rollback guidance:
 
-- if a release is bad, yank it on PyPI/TestPyPI
+- if a release is bad, yank it on PyPI
 - fix the issue in the repo
 - cut a new version and publish that replacement
 - keep the GitHub Release notes clear about the superseding version
