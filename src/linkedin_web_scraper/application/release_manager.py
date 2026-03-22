@@ -7,7 +7,7 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-_VERSION_PATTERN = re.compile(r"^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$")
+_VERSION_PATTERN = re.compile(r"^(?P<major>\d+)(?:\.(?P<minor>\d+))?(?:\.(?P<patch>\d+))?$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,14 +33,14 @@ def normalize_version_text(version_text: str) -> str:
 
 
 def parse_version_tuple(version_text: str) -> tuple[int, int, int]:
-    """Parse a strict ``X.Y.Z`` version string into a sortable tuple."""
+    """Parse a numeric version string into a sortable tuple."""
     normalized = normalize_version_text(version_text)
     match = _VERSION_PATTERN.fullmatch(normalized)
     if match is None:
         raise ValueError(f"Unsupported release version: {version_text!r}")
     major = int(match.group("major"))
-    minor = int(match.group("minor"))
-    patch = int(match.group("patch"))
+    minor = int(match.group("minor") or 0)
+    patch = int(match.group("patch") or 0)
     return (major, minor, patch)
 
 
