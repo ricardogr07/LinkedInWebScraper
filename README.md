@@ -1,5 +1,12 @@
 # LinkedInWebScraper
 
+[![CI](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/ci.yml/badge.svg)](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/ci.yml)
+[![Docs](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/docs.yml/badge.svg)](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/docs.yml)
+[![Release](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/release.yml/badge.svg)](https://github.com/ricardogr07/LinkedInWebScraper/actions/workflows/release.yml)
+[![PyPI version](https://img.shields.io/pypi/v/LinkedInWebScraper.svg)](https://pypi.org/project/LinkedInWebScraper/)
+[![Python versions](https://img.shields.io/pypi/pyversions/LinkedInWebScraper.svg)](https://pypi.org/project/LinkedInWebScraper/)
+[![License](https://img.shields.io/pypi/l/LinkedInWebScraper.svg)](https://github.com/ricardogr07/LinkedInWebScraper/blob/main/LICENSE)
+
 LinkedInWebScraper is a production-minded Python library and scheduled job runner for collecting LinkedIn job listings, normalizing the data, persisting run history, and exporting reusable datasets.
 
 ## Highlights
@@ -11,6 +18,7 @@ LinkedInWebScraper is a production-minded Python library and scheduled job runne
 - Package CLI with `scrape once`, `scrape daily`, `export`, and `--dry-run`
 - Optional OpenAI enrichment built on the current Responses API
 - Runnable examples under `examples/`
+- Auto release automation that waits for green CI and Docs runs on `main`
 
 ## Install
 
@@ -79,12 +87,19 @@ python process_ds_jobs.py
 
 ## Development
 
+Run the local gate before risky pushes or merges:
+
 ```bash
-python -m pytest -q
-python -m ruff check .
-python -m mkdocs build --strict
-python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/storage.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/config/runtime.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/application/storage.py src/linkedin_web_scraper/application/runtime_runner.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py src/linkedin_web_scraper/infra/storage/models.py src/linkedin_web_scraper/infra/storage/sqlite.py
+python -m tox -e preflight
 ```
+
+For a faster smoke-only path:
+
+```bash
+python -m tox -e smoke
+```
+
+The detailed validation matrix and release flow live in `docs/development/validation.md` and `docs/development/release-and-automation.md`.
 
 ## License
 

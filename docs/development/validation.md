@@ -32,7 +32,7 @@ The baseline compatibility smoke checks are:
 
 - build the sdist and wheel
 - verify the build succeeds from the current working tree
-- verify canonical and legacy imports still load from an installed artifact when possible
+- verify canonical imports load from an installed artifact when possible
 - verify optional features remain optional at import time when dependencies move behind extras
 
 ## When Logging Changes
@@ -65,3 +65,5 @@ The baseline compatibility smoke checks are:
 ## Commit Rule
 
 Risky changes end with green validation and one commit before the next risky checkpoint begins.
+
+Use `python -m tox -e preflight` before pushing or merging risky changes. That local gate wraps the smoke, lint, type, docs, and build checks that this repository treats as the default release barrier.

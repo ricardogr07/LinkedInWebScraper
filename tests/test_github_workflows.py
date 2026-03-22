@@ -8,6 +8,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 RUNTIME_DIR = REPO_ROOT / ".github" / "runtime"
+TOX_FILE = REPO_ROOT / "tox.toml"
 
 
 def _read(relative_path: str) -> str:
@@ -35,14 +36,9 @@ def test_ci_workflow_uses_tox_matrix_and_canonical_smoke() -> None:
     assert "- data" in text
     assert "python -m tox -e" in text
     assert "py311" in text
-    assert ".[dev]" in text
     assert "py314" in text
     assert "smoke" in text
-    assert "tests/test_example_smoke.py" in text
-    assert "tests/test_example_advanced_config_smoke.py" in text
-    assert "tests/test_example_openai_smoke.py" in text
-    assert "tests/test_main_smoke.py" in text
-    assert "tests/test_process_ds_jobs_smoke.py" in text
+    assert "python -m tox -e smoke" in text
     assert "lint" in text
     assert "type" in text
     assert "docs" in text
@@ -59,10 +55,18 @@ def test_docs_workflow_deploys_pages() -> None:
     assert "mkdocs build --strict" in text
 
 
-def test_release_workflow_uses_trusted_publishing() -> None:
+def test_release_workflow_uses_auto_release_and_trusted_publishing() -> None:
     text = _read(".github/workflows/release.yml")
+    assert "workflow_run:" in text
+    assert "- CI" in text
+    assert "- Docs" in text
+    assert "contents: write" in text
+    assert "actions: read" in text
     assert "pypa/gh-action-pypi-publish@release/v1" in text
     assert "id-token: write" in text
+    assert "softprops/action-gh-release@v2" in text
+    assert "tag_name:" in text
+    assert "target_commitish:" in text
     assert "testpypi" in text
     assert "pypi" in text
 
@@ -83,3 +87,14 @@ def test_daily_runtime_config_is_valid_and_uses_managed_paths() -> None:
     assert config["scrape"]["daily"]["openai_enabled"] is True
     assert config["scrape"]["daily"]["output_dir"] == "artifacts/jobs"
     assert config["logging"]["file_name"] == "daily-github-actions.log"
+
+
+def test_tox_config_exposes_smoke_and_preflight() -> None:
+    config = tomllib.loads(TOX_FILE.read_text(encoding="utf-8"))
+
+    assert "smoke" in config["env_list"]
+    assert "preflight" in config["env_list"]
+    assert config["env"]["smoke"]["commands"][0][0] == "pytest"
+    assert config["env"]["preflight"]["deps"][0] == "build>=1.2.2"
+    assert config["env"]["preflight"]["commands"][0][0] == "pytest"
+    assert config["env"]["preflight"]["commands"][-1][0] == "python"

@@ -6,7 +6,7 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 
 - `ci.yml`: runs the tox matrix on every push and pull request.
 - `docs.yml`: builds MkDocs and deploys the generated site to GitHub Pages on pushes to `main` and on manual dispatch.
-- `release.yml`: builds distributions and publishes them to TestPyPI and/or PyPI with trusted publishing.
+- `release.yml`: auto-triggers from successful CI and Docs runs on `main`, creates the GitHub Release object, and publishes to TestPyPI and/or PyPI with trusted publishing.
 - `daily-scrape.yml`: runs the scheduled multi-city scrape, preserves SQLite state on the `data` branch, uploads artifacts, and opens a failure issue when the automation breaks.
 
 ## One-Time GitHub Setup
@@ -25,9 +25,9 @@ This repository ships four GitHub Actions workflows that cover validation, docs 
 
 Recommended release posture:
 
-- run the workflow manually against TestPyPI first
-- publish to PyPI only after the TestPyPI install/import smoke passes
-- use GitHub Releases for the final PyPI publish path
+- use `workflow_dispatch` for TestPyPI dry runs or manual recovery
+- let the `workflow_run` path publish automatically when the version in `pyproject.toml` increases and both CI and Docs are green on `main`
+- create the GitHub Release object before the PyPI publish step
 
 ### Scheduled Runtime
 
@@ -65,16 +65,21 @@ The workflow is intentionally limited to `main` pushes and manual dispatch so pr
 
 ## Release Flow
 
-`release.yml` supports two release paths:
+`release.yml` now supports two release paths:
 
+- `workflow_run` on `CI` and `Docs` completions for automatic PyPI releases from `main`
 - `workflow_dispatch` for `testpypi`, `pypi`, or `both`
-- `release.published` for the final PyPI publish
 
-The release job sequence is:
+The automated release job sequence is:
 
-1. build the sdist and wheel through `tox -e build`
-2. publish to TestPyPI when requested
-3. publish to PyPI only when the PyPI path was requested and the TestPyPI job either succeeded or was intentionally skipped
+1. confirm the current commit is on `main` and both CI and Docs succeeded for the same SHA
+2. read the version from `pyproject.toml` and compare it with the latest published release
+3. skip if the version is not newer or the tag already exists
+4. build the sdist and wheel through `tox -e build`
+5. create the GitHub Release object and upload the built wheel and sdist
+6. publish the same built artifacts to PyPI with trusted publishing
+
+Manual TestPyPI publishing still uses the same build artifact, but it does not create a GitHub Release object.
 
 ### Rollback
 
@@ -118,3 +123,4 @@ The workflow includes:
 - Keep secrets out of TOML and out of the repo.
 - If you enable OpenAI for scheduled runs later, do it by combining a repo secret with `openai_enabled = true` in `.github/runtime/daily.toml` or a workflow env override.
 - The `data` branch is the current persistence contract for GitHub-hosted automation. A future cloud database can replace it without changing the CLI surface.
+- Use `python -m tox -e preflight` before risky pushes or merges. That local gate runs the same smoke, lint, type, docs, and build checks that the repo expects before release work.

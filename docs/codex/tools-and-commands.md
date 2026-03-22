@@ -9,6 +9,16 @@ This page lists the exact local commands and tool statuses that matter for devel
 - Purpose: run the default offline test suite.
 - Status: `ready`
 
+### `smoke`
+- Command: `python -m tox -e smoke`
+- Purpose: run the canonical example and runtime smoke checks through tox.
+- Status: `ready`
+
+### `preflight`
+- Command: `python -m tox -e preflight`
+- Purpose: run the full local gate before a risky push or merge.
+- Status: `ready`
+
 ### `lint`
 - Command: `python -m ruff check .`
 - Purpose: run repository lint checks.
@@ -20,13 +30,13 @@ This page lists the exact local commands and tool statuses that matter for devel
 - Status: `ready`
 
 ### `type_bootstrap`
-- Command: `python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/storage.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/config/runtime.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/application/storage.py src/linkedin_web_scraper/application/runtime_runner.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py src/linkedin_web_scraper/infra/storage/models.py src/linkedin_web_scraper/infra/storage/sqlite.py`
+- Command: `python -m pyrefly check src/linkedin_web_scraper/config/job_scraper_config.py src/linkedin_web_scraper/config/job_scraper_advanced_config.py src/linkedin_web_scraper/config/job_scraper_config_factory.py src/linkedin_web_scraper/config/openai.py src/linkedin_web_scraper/config/storage.py src/linkedin_web_scraper/config/options.py src/linkedin_web_scraper/config/runtime.py src/linkedin_web_scraper/application/daily_scrape_service.py src/linkedin_web_scraper/application/linkedin_job_scraper.py src/linkedin_web_scraper/application/storage.py src/linkedin_web_scraper/application/runtime_runner.py src/linkedin_web_scraper/application/release_manager.py src/linkedin_web_scraper/domain/job_data_cleaner.py src/linkedin_web_scraper/domain/job_title_classifier.py src/linkedin_web_scraper/infra/logging.py src/linkedin_web_scraper/infra/paths.py src/linkedin_web_scraper/infra/http/policy.py src/linkedin_web_scraper/infra/http/utils.py src/linkedin_web_scraper/infra/http/job_scraper.py src/linkedin_web_scraper/infra/openai/models.py src/linkedin_web_scraper/infra/openai/openai_handler.py src/linkedin_web_scraper/infra/openai/job_description_processor.py src/linkedin_web_scraper/infra/storage/models.py src/linkedin_web_scraper/infra/storage/sqlite.py`
 - Purpose: run the current canonical-package Pyrefly seam across config, application orchestration, domain logic, and core infrastructure helpers.
 - Status: `incremental`
 
 ### `docs`
 - Command: `python -m mkdocs build --strict`
-- Purpose: build user-facing and internal docs and fail on nav or markdown errors.
+- Purpose: build user-facing and internal documentation and fail on nav or markdown issues.
 - Status: `ready`
 
 ### `build`
@@ -36,7 +46,7 @@ This page lists the exact local commands and tool statuses that matter for devel
 
 ### `smoke_examples`
 - Command: `python -m pytest -q tests/test_example_smoke.py tests/test_example_advanced_config_smoke.py tests/test_example_openai_smoke.py tests/test_main_smoke.py tests/test_process_ds_jobs_smoke.py`
-- Purpose: verify the example scripts and daily-run orchestration paths stay intact.
+- Purpose: run the examples/ scripts and main orchestration smoke checks directly.
 - Status: `ready`
 
 ### `tox_all`
@@ -71,5 +81,6 @@ This page lists the exact local commands and tool statuses that matter for devel
 - Current note: the direct executable exists, but some shells may hit execution-policy issues with wrapper scripts. Prefer documented Codex workflows over local shell assumptions.
 
 ## Why The Commands Use `python -m`
+
 - The repo toolchain is more reliable when invoked through the active Python interpreter.
 - It avoids dependence on whether script shims are on `PATH`.

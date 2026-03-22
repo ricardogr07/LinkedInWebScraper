@@ -60,19 +60,13 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install package for smoke tests
+      - name: Install tox
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .[dev]
+          python -m pip install tox
 
       - name: Run canonical smoke tests
-        run: >-
-          python -m pytest -q
-          tests/test_example_smoke.py
-          tests/test_example_advanced_config_smoke.py
-          tests/test_example_openai_smoke.py
-          tests/test_main_smoke.py
-          tests/test_process_ds_jobs_smoke.py
+        run: python -m tox -e smoke
 
   quality:
     name: Quality (${{ matrix.tox-env }})

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "LinkedInWebScraper"
-version = "1.1.0"
+version = "1.1.1"
 description = "A library for scraping LinkedIn job postings."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -115,6 +115,7 @@ project-includes = [
   "src/linkedin_web_scraper/application/linkedin_job_scraper.py",
   "src/linkedin_web_scraper/application/storage.py",
   "src/linkedin_web_scraper/application/runtime_runner.py",
+  "src/linkedin_web_scraper/application/release_manager.py",
   "src/linkedin_web_scraper/domain/job_data_cleaner.py",
   "src/linkedin_web_scraper/domain/job_title_classifier.py",
   "src/linkedin_web_scraper/infra/logging.py",
@@ -131,4 +132,3 @@ project-includes = [
 search-path = ["src"]
 python-version = "3.11"
 use-ignore-files = true
-
