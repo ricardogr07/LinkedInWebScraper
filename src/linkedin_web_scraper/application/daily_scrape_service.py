@@ -116,6 +116,17 @@ class DailyScrapeService:
             combined_jobs = pd.concat(scraper_results, ignore_index=True)
             self.storage.store_jobs(run_id, combined_jobs)
             persisted_jobs = self.storage.load_run_jobs(run_id)
+
+            if persisted_jobs.empty:
+                self.logger.warning("No jobs found for %s in %s.", position, location)
+                self.storage.finish_run(
+                    run_id,
+                    status="completed",
+                    output_path=target_output_path,
+                    row_count=0,
+                )
+                return persisted_jobs
+
             file_manager.save_jobs_to_csv(
                 df=persisted_jobs,
                 file_name=target_output_path,
