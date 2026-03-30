@@ -38,6 +38,10 @@ class FileManager:
         append: bool = True,
     ) -> None:
         """Save or append jobs to a CSV file."""
+        if df.empty:
+            self.logger.warning("Skipping CSV save: no jobs to persist.")
+            return
+
         target_file = resolve_jobs_output_path(
             file_name or self.generate_file_name(), self.output_dir
         )
