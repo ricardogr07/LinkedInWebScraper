@@ -100,13 +100,13 @@ The workflow sequence is:
 
 1. install the package with the optional OpenAI extra available
 2. attach a `data` branch worktree
-3. restore the previous SQLite state from `data/state`
+3. restore the previous SQLite state from the `data-latest` release asset; a run refuses to start fresh unless it positively confirms the asset is absent and was dispatched with `allow_fresh_state=true` (first-run bootstrap only)
 4. initialize the SQLite schema before the scrape
 5. run a CLI dry run for visibility
 6. run `linkedin-webscraper scrape daily --config .github/runtime/daily.toml`
-7. copy `artifacts/state` back to `data/state`
+7. upload `artifacts/state/linkedin_jobs.sqlite` back to the `data-latest` release with `--clobber`
 8. copy current CSV exports to both `data/exports/latest` and `data/exports/YYYY-MM-DD`
-9. commit and push the updated automation state back to `data`
+9. commit and push the export data back to `data`
 10. upload workflow artifacts and summarize the run
 
 ### Failure Handling
@@ -122,5 +122,6 @@ The workflow includes:
 
 - Keep secrets out of TOML and out of the repo.
 - If you enable OpenAI for scheduled runs later, do it by combining a repo secret with `openai_enabled = true` in `.github/runtime/daily.toml` or a workflow env override.
-- The `data` branch is the current persistence contract for GitHub-hosted automation. A future cloud database can replace it without changing the CLI surface.
+- The persistence contract for GitHub-hosted automation: the canonical `linkedin_jobs.sqlite` lives as an asset on the rolling `data-latest` release (2 GiB per-file limit, kept out of git history); CSV exports live on the `data` branch. A future cloud database can replace the release asset without changing the CLI surface.
+- Rollback for state: every run also uploads `artifacts/state` as a workflow artifact with 14-day retention; re-upload a prior day's database to the `data-latest` release to roll back.
 - Use `python -m tox -e preflight` before risky pushes or merges. That local gate runs the same smoke, lint, type, docs, and build checks that the repo expects before release work.

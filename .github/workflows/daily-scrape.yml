@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "30 12 * * *"
   workflow_dispatch:
+    inputs:
+      allow_fresh_state:
+        description: "Start with a fresh state database when the data-latest release asset is missing (first-run bootstrap only)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -27,7 +32,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -49,27 +54,36 @@ jobs:
           fi
 
       - name: Restore persisted state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import shutil
-
-          for directory in (Path("artifacts/state"), Path("artifacts/jobs"), Path("artifacts/logs")):
-              directory.mkdir(parents=True, exist_ok=True)
-
-          source = Path(".tmp/data-branch/state")
-          target = Path("artifacts/state")
-          if not source.exists():
-              raise SystemExit(0)
-
-          for item in source.iterdir():
-              destination = target / item.name
-              if item.is_dir():
-                  shutil.copytree(item, destination, dirs_exist_ok=True)
-              else:
-                  destination.parent.mkdir(parents=True, exist_ok=True)
-                  shutil.copy2(item, destination)
-          PY
+          mkdir -p artifacts/state artifacts/jobs artifacts/logs
+          # A transient API failure must abort the run, never masquerade as "state absent":
+          # a fresh database published with --clobber would destroy the canonical state.
+          if ! releases=$(gh release list --limit 200 --json tagName --jq '.[].tagName'); then
+            echo "::error::Could not list releases; refusing to guess about persisted state."
+            exit 1
+          fi
+          asset_present=false
+          if grep -qx 'data-latest' <<<"$releases"; then
+            if ! assets=$(gh release view data-latest --json assets --jq '.assets[].name'); then
+              echo "::error::Could not list data-latest assets; refusing to guess about persisted state."
+              exit 1
+            fi
+            if grep -qx 'linkedin_jobs.sqlite' <<<"$assets"; then
+              asset_present=true
+            fi
+          fi
+          if [ "$asset_present" = true ]; then
+            gh release download data-latest --pattern linkedin_jobs.sqlite --dir artifacts/state
+            echo "State restored from the data-latest release."
+          elif [ "${{ inputs.allow_fresh_state }}" = "true" ]; then
+            echo "Asset confirmed absent; starting with a fresh state database (allow_fresh_state)."
+          else
+            echo "::error::The data-latest release asset is absent. Refusing to start fresh; dispatch with allow_fresh_state=true for first-run bootstrap."
+            exit 1
+          fi
 
       - name: Initialize SQLite schema
         run: |
@@ -92,7 +106,18 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: linkedin-webscraper scrape daily --config .github/runtime/daily.toml
 
-      - name: Sync state and exports into data branch
+      - name: Publish state to data-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if ! gh release view data-latest >/dev/null 2>&1; then
+            gh release create data-latest --title "Scraper state (rolling)" --latest=false \
+              --notes "Rolling canonical scraper state. The Daily Scrape workflow restores linkedin_jobs.sqlite from this release and uploads the updated copy after each run."
+          fi
+          gh release upload data-latest artifacts/state/linkedin_jobs.sqlite --clobber
+
+      - name: Sync exports into data branch
         run: |
           python - <<'PY'
           from datetime import datetime, timezone
@@ -101,19 +126,12 @@ jobs:
 
           run_date = datetime.now(timezone.utc).date().isoformat()
           data_root = Path(".tmp/data-branch")
-          state_source = Path("artifacts/state")
           jobs_source = Path("artifacts/jobs")
 
-          state_target = data_root / "state"
           latest_target = data_root / "exports" / "latest"
           dated_target = data_root / "exports" / run_date
 
-          for directory in (state_target, latest_target.parent, dated_target.parent):
-              directory.mkdir(parents=True, exist_ok=True)
-
-          if state_target.exists():
-              shutil.rmtree(state_target)
-          shutil.copytree(state_source, state_target)
+          latest_target.parent.mkdir(parents=True, exist_ok=True)
 
           if latest_target.exists():
               shutil.rmtree(latest_target)
@@ -124,15 +142,15 @@ jobs:
           shutil.copytree(jobs_source, dated_target)
           PY
 
-      - name: Commit and push automation state
+      - name: Commit and push export data
         working-directory: .tmp/data-branch
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state exports
+          git add exports
           if git diff --cached --quiet; then
-            echo "No automation state changes to commit."
+            echo "No export changes to commit."
             exit 0
           fi
           git commit -m "Daily scrape $(date -u +%F)"
@@ -140,7 +158,7 @@ jobs:
 
       - name: Upload scrape artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: daily-scrape-${{ github.run_id }}
           path: |
@@ -157,14 +175,14 @@ jobs:
             echo "## Daily scrape"
             echo
             echo "- Workflow config: .github/runtime/daily.toml"
-            echo "- State branch: data"
+            echo "- State: data-latest release asset (exports on the data branch)"
             echo "- Artifact retention: 14 days"
             echo "- Trigger: ${{ github.event_name }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Close open automation failure issues
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const title = "[automation] Daily scrape failure";
@@ -191,7 +209,7 @@ jobs:
 
       - name: Open or update automation failure issue
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const title = "[automation] Daily scrape failure";

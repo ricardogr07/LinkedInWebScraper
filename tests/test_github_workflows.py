@@ -72,13 +72,21 @@ def test_release_workflow_uses_auto_release_and_trusted_publishing() -> None:
     assert "testpypi" not in text
 
 
-def test_daily_workflow_persists_state_branch_and_artifacts() -> None:
+def test_daily_workflow_persists_release_state_and_artifacts() -> None:
     text = _read(".github/workflows/daily-scrape.yml")
     assert "schedule:" in text
-    assert "data" in text
     assert "git worktree add --orphan -b data .tmp/data-branch" in text
     assert ".github/runtime/daily.toml" in text
-    assert "actions/upload-artifact@v4" in text
+    assert "gh release download data-latest" in text
+    assert "gh release upload data-latest artifacts/state/linkedin_jobs.sqlite --clobber" in text
+    # a scheduled run must never fresh-start; only an explicit dispatch input may
+    assert "allow_fresh_state" in text
+    assert "Refusing to start fresh" in text
+    assert "git add exports" in text
+    assert "git add state" not in text
+    assert "actions/setup-python@v7" in text
+    assert "actions/upload-artifact@v7" in text
+    assert "actions/github-script@v9" in text
     assert "[automation] Daily scrape failure" in text
 
 
