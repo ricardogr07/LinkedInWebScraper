@@ -59,13 +59,29 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts/state artifacts/jobs artifacts/logs
-          if gh release view data-latest --json assets --jq '.assets[].name' | grep -qx 'linkedin_jobs.sqlite'; then
+          # A transient API failure must abort the run, never masquerade as "state absent":
+          # a fresh database published with --clobber would destroy the canonical state.
+          if ! releases=$(gh release list --limit 200 --json tagName --jq '.[].tagName'); then
+            echo "::error::Could not list releases; refusing to guess about persisted state."
+            exit 1
+          fi
+          asset_present=false
+          if grep -qx 'data-latest' <<<"$releases"; then
+            if ! assets=$(gh release view data-latest --json assets --jq '.assets[].name'); then
+              echo "::error::Could not list data-latest assets; refusing to guess about persisted state."
+              exit 1
+            fi
+            if grep -qx 'linkedin_jobs.sqlite' <<<"$assets"; then
+              asset_present=true
+            fi
+          fi
+          if [ "$asset_present" = true ]; then
             gh release download data-latest --pattern linkedin_jobs.sqlite --dir artifacts/state
             echo "State restored from the data-latest release."
           elif [ "${{ inputs.allow_fresh_state }}" = "true" ]; then
-            echo "No data-latest release asset found; starting with a fresh state database (allow_fresh_state)."
+            echo "Asset confirmed absent; starting with a fresh state database (allow_fresh_state)."
           else
-            echo "::error::Could not confirm the linkedin_jobs.sqlite asset on the data-latest release. Refusing to start fresh so a transient API failure can never clobber the canonical state. For first-run bootstrap, dispatch with allow_fresh_state=true."
+            echo "::error::The data-latest release asset is absent. Refusing to start fresh; dispatch with allow_fresh_state=true for first-run bootstrap."
             exit 1
           fi
 
