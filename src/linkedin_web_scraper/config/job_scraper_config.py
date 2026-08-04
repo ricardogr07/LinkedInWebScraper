@@ -28,6 +28,7 @@ class JobScraperConfig:
     position: str
     location: str
     openai_enabled: bool = False
+    enrichment_required: bool = False
     openai_model: str = DEFAULT_OPENAI_MODEL
     time_posted: TimePosted = TimePosted.DAY
     remote: RemoteType = RemoteType.ALL
@@ -48,6 +49,8 @@ class JobScraperConfig:
         return (
             "JobScraperConfig("
             f"position={self.position}, location={self.location}, "
-            f"openai_enabled={self.openai_enabled}, openai_model={self.openai_model}, "
+            f"openai_enabled={self.openai_enabled}, "
+            f"enrichment_required={self.enrichment_required}, "
+            f"openai_model={self.openai_model}, "
             f"time_posted={self.time_posted}, remote={self.remote}, distance={self.distance})"
         )

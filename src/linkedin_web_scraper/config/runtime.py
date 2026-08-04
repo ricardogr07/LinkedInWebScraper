@@ -95,6 +95,7 @@ class ScrapeOnceRuntimeConfig:
     position: str = "Data Scientist"
     location: str = "Monterrey"
     openai_enabled: bool = False
+    enrichment_required: bool = False
     openai_model: str = DEFAULT_OPENAI_MODEL
     time_posted: TimePosted = TimePosted.DAY
     remote_types: tuple[RemoteType, ...] = DEFAULT_RUNTIME_REMOTE_TYPES
@@ -106,6 +107,7 @@ class ScrapeOnceRuntimeConfig:
         self.position = str(self.position).strip()
         self.location = str(self.location).strip()
         self.openai_enabled = _normalize_bool(self.openai_enabled)
+        self.enrichment_required = _normalize_bool(self.enrichment_required)
         self.openai_model = str(self.openai_model).strip() or DEFAULT_OPENAI_MODEL
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.remote_types = _normalize_remote_types(self.remote_types)
@@ -121,6 +123,7 @@ class ScrapeDailyRuntimeConfig:
     cities: tuple[str, ...] = DEFAULT_RUNTIME_CITIES
     position: str = "Data Scientist"
     openai_enabled: bool = False
+    enrichment_required: bool = False
     openai_model: str = DEFAULT_OPENAI_MODEL
     time_posted: TimePosted = TimePosted.DAY
     output_dir: str | None = None
@@ -130,6 +133,7 @@ class ScrapeDailyRuntimeConfig:
         self.cities = tuple(str(city).strip() for city in self.cities if str(city).strip())
         self.position = str(self.position).strip()
         self.openai_enabled = _normalize_bool(self.openai_enabled)
+        self.enrichment_required = _normalize_bool(self.enrichment_required)
         self.openai_model = str(self.openai_model).strip() or DEFAULT_OPENAI_MODEL
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.output_dir = _normalize_string(self.output_dir)
@@ -226,6 +230,12 @@ def apply_environment_overrides(
         normalized_openai_enabled = _normalize_bool(openai_enabled)
         config.scrape_once.openai_enabled = normalized_openai_enabled
         config.scrape_daily.openai_enabled = normalized_openai_enabled
+
+    enrichment_required = environment.get("LINKEDIN_WEB_SCRAPER_ENRICHMENT_REQUIRED")
+    if enrichment_required is not None:
+        normalized_enrichment_required = _normalize_bool(enrichment_required)
+        config.scrape_once.enrichment_required = normalized_enrichment_required
+        config.scrape_daily.enrichment_required = normalized_enrichment_required
 
     openai_model = environment.get("LINKEDIN_WEB_SCRAPER_OPENAI_MODEL")
     if openai_model:

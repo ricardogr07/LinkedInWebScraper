@@ -10,6 +10,7 @@ state_dir = "artifacts/state"
 cities = ["Monterrey", "Guadalajara", "Mexico City"]
 position = "Data Scientist"
 openai_enabled = true
+enrichment_required = true
 openai_model = "gpt-4o-mini"
 time_posted = "DAY"
 output_dir = "artifacts/jobs"

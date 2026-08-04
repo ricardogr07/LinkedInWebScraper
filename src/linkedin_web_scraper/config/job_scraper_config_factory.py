@@ -22,6 +22,7 @@ class JobScraperConfigFactory:
         time_posted: str | TimePosted = TimePosted.DAY,
         remote: str | RemoteType = RemoteType.ALL,
         *,
+        enrichment_required: bool = False,
         distance: int = 10,
         advanced_config: JobScraperAdvancedConfig | None = None,
     ) -> JobScraperConfig:
@@ -30,6 +31,7 @@ class JobScraperConfigFactory:
             position=position,
             location=location,
             openai_enabled=openai_enabled,
+            enrichment_required=enrichment_required,
             openai_model=openai_model,
             time_posted=_normalize_time_posted(time_posted),
             remote=_normalize_remote_type(remote),
