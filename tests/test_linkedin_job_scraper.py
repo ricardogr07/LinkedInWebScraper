@@ -3,12 +3,14 @@ from __future__ import annotations
 import logging
 
 import pandas as pd
+import pytest
 
 from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScraper
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.domain.job_title_classifier import JobTitleClassifier
 from linkedin_web_scraper.infra.openai.models import JobDescriptionEnrichment
+from linkedin_web_scraper.infra.openai.openai_handler import OpenAIConfigurationError
 
 
 class FakeJobScraper:
@@ -229,6 +231,47 @@ def test_linkedin_job_scraper_returns_cleaned_jobs_when_openai_setup_fails(monke
     assert jobs["Title"].tolist() == ["Data Scientist"]
     assert jobs["DetailsCleaned"].tolist() == [True]
     assert "ShortDescription" not in jobs.columns
+
+
+def test_linkedin_job_scraper_raises_when_required_enrichment_is_unavailable(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    config = JobScraperConfig(
+        position="Data Scientist",
+        location="Monterrey",
+        openai_enabled=True,
+        enrichment_required=True,
+    )
+
+    with pytest.raises(OpenAIConfigurationError):
+        LinkedInJobScraper(
+            logger=LOGGER,
+            config=config,
+            job_scraper=FakeJobScraper(SCRAPED_JOBS.iloc[[0]], DETAILED_JOBS.iloc[[0]]),
+            job_data_cleaner=FakeCleaner(),
+        )
+
+
+def test_linkedin_job_scraper_enriches_when_required_enrichment_is_available():
+    fake_job_scraper = FakeJobScraper(SCRAPED_JOBS.iloc[[0]], DETAILED_JOBS.iloc[[0]])
+    config = JobScraperConfig(
+        position="Data Scientist",
+        location="Monterrey",
+        openai_enabled=True,
+        enrichment_required=True,
+    )
+
+    scraper = LinkedInJobScraper(
+        logger=LOGGER,
+        config=config,
+        job_scraper=fake_job_scraper,
+        job_data_cleaner=FakeCleaner(),
+        openai_handler=FakeEnricher(),
+    )
+
+    jobs = scraper.run()
+
+    assert jobs["ShortDescription"].tolist() == ["Summarized description"]
+    assert jobs["FinalProcessed"].tolist() == [True]
 
 
 def test_linkedin_job_scraper_returns_empty_frame_when_scrape_raises():

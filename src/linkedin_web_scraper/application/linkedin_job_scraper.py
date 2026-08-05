@@ -72,6 +72,11 @@ class LinkedInJobScraper:
                 model=self.config.openai_model,
             )
         except Exception:
+            if self.config.enrichment_required:
+                self.logger.exception(
+                    "Enrichment is required but initialization failed. Failing the run."
+                )
+                raise
             self.logger.exception(
                 "OpenAI enrichment requested but initialization failed. Continuing without it."
             )

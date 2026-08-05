@@ -44,6 +44,7 @@ append = false
 cities = ["Austin", "Dallas"]
 position = "ML Engineer"
 openai_enabled = true
+enrichment_required = true
 openai_model = "gpt-4.1-mini"
 time_posted = "day"
 output_dir = "daily-jobs"
@@ -69,7 +70,9 @@ output_dir = "exports"
     assert runtime_config.scrape_once.time_posted == TimePosted.WEEK
     assert runtime_config.scrape_once.remote_types == (RemoteType.REMOTE, RemoteType.HYBRID)
     assert runtime_config.scrape_once.append is False
+    assert runtime_config.scrape_once.enrichment_required is False
     assert runtime_config.scrape_daily.cities == ("Austin", "Dallas")
+    assert runtime_config.scrape_daily.enrichment_required is True
     assert runtime_config.scrape_daily.openai_model == "gpt-4.1-mini"
     assert runtime_config.export.run_id == "run-123"
     assert runtime_config.export.file_name == "export.csv"
@@ -101,6 +104,7 @@ location = "Monterrey"
             "LINKEDIN_WEB_SCRAPER_STORAGE_URL": "sqlite:///override.sqlite",
             "LINKEDIN_WEB_SCRAPER_OUTPUT_DIR": "custom-output",
             "LINKEDIN_WEB_SCRAPER_OPENAI_ENABLED": "true",
+            "LINKEDIN_WEB_SCRAPER_ENRICHMENT_REQUIRED": "true",
             "LINKEDIN_WEB_SCRAPER_OPENAI_MODEL": "gpt-4.1-mini",
         },
     )
@@ -112,5 +116,7 @@ location = "Monterrey"
     assert runtime_config.export.output_dir == "custom-output"
     assert runtime_config.scrape_once.openai_enabled is True
     assert runtime_config.scrape_daily.openai_enabled is True
+    assert runtime_config.scrape_once.enrichment_required is True
+    assert runtime_config.scrape_daily.enrichment_required is True
     assert runtime_config.scrape_once.openai_model == "gpt-4.1-mini"
     assert runtime_config.scrape_daily.openai_model == "gpt-4.1-mini"
