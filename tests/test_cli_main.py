@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import sys
 from io import StringIO
 
 cli_main_module = importlib.import_module("linkedin_web_scraper.interfaces.cli.main")
@@ -79,6 +80,30 @@ def test_cli_main_dry_run_prints_once_plan():
     assert not FakeRunner.run_once_calls
     assert "scrape once" in output.getvalue()
     assert "ML Engineer" in output.getvalue()
+
+
+def test_cli_main_reads_sys_argv_when_argv_is_none(monkeypatch):
+    # The console script calls main() with argv=None; flags must not be discarded.
+    _reset_fake_runner()
+    output = StringIO()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["linkedin-webscraper", "scrape", "daily", "--dry-run", "--position", "ML Engineer"],
+    )
+
+    result = cli_main_module.main(
+        None,
+        runner_cls=FakeRunner,
+        configure_logging_fn=lambda **kwargs: None,
+        logger_factory=lambda name: object(),
+        stdout=output,
+    )
+
+    assert result == 0
+    assert FakeRunner.describe_calls == ["daily"]
+    assert not FakeRunner.run_daily_calls
+    assert "scrape daily" in output.getvalue()
 
 
 def test_cli_main_export_command_uses_runner():
