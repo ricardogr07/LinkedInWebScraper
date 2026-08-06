@@ -156,7 +156,7 @@ def main(
     """Run the package CLI with runtime-configured scrape workflows."""
     output = stdout or sys.stdout
     parser = build_parser()
-    parsed_args = parser.parse_args(list(argv) if argv is not None else [])
+    parsed_args = parser.parse_args(argv)
     command, scrape_command = _resolve_command(parsed_args)
 
     runtime_config = load_runtime_config(parsed_args.config_path)
