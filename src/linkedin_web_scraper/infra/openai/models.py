@@ -1,13 +1,70 @@
-"""Typed models and protocols for optional OpenAI enrichment."""
+"""Typed models and protocols shared by the optional enrichment adapters."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+from functools import lru_cache
+from typing import Any, Protocol, runtime_checkable
 
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 
 NOT_AVAILABLE = "N/A"
+
+SYSTEM_PROMPT = """You extract structured data from job descriptions. Return a concise English summary of the role itself, list the relevant hard skills and technologies, capture explicit experience requirements when present, capture the minimum level of studies when present, and mark whether English proficiency is required. If the source description is in English, treat English as required. Do not include company marketing or unrelated company background in the summary."""
+
+
+class EnrichmentDependencyError(RuntimeError):
+    """Raised when optional enrichment dependencies are missing."""
+
+
+@lru_cache(maxsize=1)
+def load_response_schema() -> type[Any]:
+    """Build the provider-neutral structured-output schema for enrichment."""
+    try:
+        from pydantic import BaseModel, Field
+    except ImportError as exc:
+        raise EnrichmentDependencyError(
+            "Structured enrichment parsing requires the optional dependencies "
+            "installed via `.[openai]` or `.[anthropic]`."
+        ) from exc
+
+    class JobDescriptionSchema(BaseModel):
+        description: str = Field(
+            description="A concise English summary of the job responsibilities only."
+        )
+        tech_stack: list[str] = Field(
+            default_factory=list,
+            description="Relevant programming languages, tools, frameworks, and hard skills.",
+        )
+        years_of_experience: str = Field(
+            default=NOT_AVAILABLE,
+            description="Experience requirement as written in the job description, or N/A.",
+        )
+        minimum_level_of_studies: str = Field(
+            default=NOT_AVAILABLE,
+            description="Minimum education requirement, or N/A if not stated.",
+        )
+        english_required: bool | None = Field(
+            default=None,
+            description="True when English proficiency is required or clearly implied.",
+        )
+
+    return JobDescriptionSchema
+
+
+@dataclass(slots=True, frozen=True)
+class EnrichmentClientConfig:
+    """Provider-neutral model and credential settings for an enrichment client."""
+
+    model: str
+    api_key: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "model", str(self.model).strip())
+
+        if self.api_key is not None:
+            normalized_api_key = self.api_key.strip()
+            object.__setattr__(self, "api_key", normalized_api_key or None)
 
 
 @dataclass(slots=True, frozen=True)
