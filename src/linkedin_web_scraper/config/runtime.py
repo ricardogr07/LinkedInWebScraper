@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
+from linkedin_web_scraper.config.job_scraper_config import _default_enrichment_model
 from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, TimePosted
 from linkedin_web_scraper.config.storage import DEFAULT_SQLITE_DB_FILE
 
@@ -102,7 +102,7 @@ class ScrapeOnceRuntimeConfig:
     location: str = "Monterrey"
     enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE
     enrichment_required: bool = False
-    enrichment_model: str = DEFAULT_OPENAI_MODEL
+    enrichment_model: str = ""
     time_posted: TimePosted = TimePosted.DAY
     remote_types: tuple[RemoteType, ...] = DEFAULT_RUNTIME_REMOTE_TYPES
     file_name: str | None = None
@@ -114,7 +114,9 @@ class ScrapeOnceRuntimeConfig:
         self.location = str(self.location).strip()
         self.enrichment_provider = _normalize_enrichment_provider(self.enrichment_provider)
         self.enrichment_required = _normalize_bool(self.enrichment_required)
-        self.enrichment_model = str(self.enrichment_model).strip() or DEFAULT_OPENAI_MODEL
+        self.enrichment_model = str(self.enrichment_model).strip() or _default_enrichment_model(
+            self.enrichment_provider
+        )
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.remote_types = _normalize_remote_types(self.remote_types)
         self.file_name = _normalize_string(self.file_name)
@@ -130,7 +132,7 @@ class ScrapeDailyRuntimeConfig:
     position: str = "Data Scientist"
     enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE
     enrichment_required: bool = False
-    enrichment_model: str = DEFAULT_OPENAI_MODEL
+    enrichment_model: str = ""
     time_posted: TimePosted = TimePosted.DAY
     output_dir: str | None = None
     combined_file_name: str | None = None
@@ -140,7 +142,9 @@ class ScrapeDailyRuntimeConfig:
         self.position = str(self.position).strip()
         self.enrichment_provider = _normalize_enrichment_provider(self.enrichment_provider)
         self.enrichment_required = _normalize_bool(self.enrichment_required)
-        self.enrichment_model = str(self.enrichment_model).strip() or DEFAULT_OPENAI_MODEL
+        self.enrichment_model = str(self.enrichment_model).strip() or _default_enrichment_model(
+            self.enrichment_provider
+        )
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.output_dir = _normalize_string(self.output_dir)
         self.combined_file_name = _normalize_string(self.combined_file_name)
