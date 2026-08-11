@@ -40,7 +40,7 @@ jobs:
       - name: Install runtime dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .[openai]
+          python -m pip install -e .[openai,anthropic]
 
       - name: Attach data branch worktree
         shell: bash
@@ -104,6 +104,7 @@ jobs:
       - name: Run daily scrape
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: linkedin-webscraper scrape daily --config .github/runtime/daily.toml
 
       - name: Publish state to data-latest release
