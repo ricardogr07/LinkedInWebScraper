@@ -123,6 +123,26 @@ SQLite persistence is enabled by default for CLI and `DailyScrapeService` workfl
 
 Use `build_sqlite_storage_url()` for a managed default URL, or inject `SQLiteScrapeStorage(storage_url=...)` into `DailyScrapeService` when you need a custom local path or DSN.
 
+### mssql / Azure SQL
+
+`SQLiteScrapeStorage` runs against any SQLAlchemy-supported dialect, not only SQLite.
+Point it at Azure SQL (or any mssql server) by setting `LINKEDIN_WEB_SCRAPER_STORAGE_URL`
+to a `mssql+pyodbc://` URL, or by passing that URL as `runtime_config.storage.url` /
+`storage_url=`. Install the `pyodbc` driver dependency with:
+
+```bash
+pip install LinkedInWebScraper[mssql]
+```
+
+Text columns use SQLAlchemy's generic `Unicode`/`UnicodeText` types so mssql renders
+them as `NVARCHAR`, keeping non-ASCII text (Spanish job postings, for example)
+round-tripping correctly. The engine is created with `pool_pre_ping=True` so a stale
+connection, for example an Azure SQL serverless tier resuming from auto-pause, is
+retried transparently instead of surfacing as a connection error.
+
+`Base.metadata.create_all()` provisions the schema on first use; there is no Alembic
+migration path yet, schema changes require a fresh database or a hand-run migration.
+
 ## Root Runtime Scripts
 
 `main.py` and `process_ds_jobs.py` remain available as direct runtime entrypoints for the daily and once workflows.
