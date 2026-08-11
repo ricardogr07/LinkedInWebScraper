@@ -30,9 +30,12 @@ class JobDescriptionProcessor:
         self,
         enricher: JobDescriptionEnricher,
         logger: logging.Logger | Logger | None = None,
+        *,
+        enrichment_required: bool = False,
     ):
         self.enricher = enricher
         self.logger = resolve_logger(logger, name=__name__)
+        self.enrichment_required = enrichment_required
 
     def process_job_descriptions(self, df_jobs: pd.DataFrame) -> pd.DataFrame:
         """Process job descriptions and append parsed fields without failing the scrape."""
@@ -58,9 +61,12 @@ class JobDescriptionProcessor:
                 enrichment = self.enricher.extract_job_description(description)
             except Exception:
                 self.logger.exception(
-                    "Failed to enrich job description for JobID %s. Leaving row unchanged.",
+                    "Failed to enrich job description for JobID %s.",
                     row.get("JobID", NOT_AVAILABLE),
                 )
+                if self.enrichment_required:
+                    raise
+                self.logger.warning("Leaving row unchanged since enrichment is not required.")
                 continue
 
             mutable_jobs.loc[index, "ShortDescription"] = enrichment.short_description

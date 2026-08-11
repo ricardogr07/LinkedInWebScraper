@@ -80,7 +80,9 @@ class LinkedInJobScraper:
                 "Enrichment requested but initialization failed. Continuing without it."
             )
             return None
-        return JobDescriptionProcessor(handler, self.logger)
+        return JobDescriptionProcessor(
+            handler, self.logger, enrichment_required=self.config.enrichment_required
+        )
 
     def _build_enricher(self) -> JobDescriptionEnricher:
         if self.config.enrichment_provider is EnrichmentProvider.ANTHROPIC:

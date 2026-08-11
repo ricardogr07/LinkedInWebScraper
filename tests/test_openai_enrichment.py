@@ -155,3 +155,11 @@ def test_job_description_processor_continues_after_per_row_enrichment_failures()
 
     assert enriched.loc[2, "ShortDescription"] == "N/A"
     assert enriched.loc[2, "English"] == "N/A"
+
+
+def test_job_description_processor_raises_on_failure_when_enrichment_required():
+    df_jobs = pd.DataFrame([{"JobID": "1", "Description": "raise this one"}])
+    processor = JobDescriptionProcessor(FlakyEnricher(), logger=LOGGER, enrichment_required=True)
+
+    with pytest.raises(RuntimeError, match="boom"):
+        processor.process_job_descriptions(df_jobs)
