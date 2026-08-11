@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Integer, Unicode, UniqueConstraint
+from sqlalchemy import UnicodeText as Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+# Unicode/UnicodeText (not String/Text) so mssql renders NVARCHAR and Spanish text
+# round-trips; SQLite and other dialects treat them the same as String/Text.
+String = Unicode
 
 
 class Base(DeclarativeBase):
-    """Base declarative model for the SQLite scrape storage schema."""
+    """Base declarative model for the persisted scrape storage schema (SQLite or mssql)."""
 
 
 def utcnow() -> datetime:
