@@ -65,7 +65,7 @@ def test_release_workflow_uses_auto_release_and_trusted_publishing() -> None:
     assert "actions: read" in text
     assert "pypa/gh-action-pypi-publish@release/v1" in text
     assert "id-token: write" in text
-    assert "softprops/action-gh-release@v2" in text
+    assert "softprops/action-gh-release@v3" in text
     assert "tag_name:" in text
     assert "target_commitish:" in text
     assert "publish_pypi" in text
