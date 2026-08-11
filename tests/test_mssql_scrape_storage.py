@@ -3,6 +3,10 @@
 Skipped unless LINKEDIN_WEB_SCRAPER_TEST_MSSQL_URL points at a reachable mssql
 instance (a mssql+pyodbc:// URL). CI supplies this via a
 mcr.microsoft.com/mssql/server service container; locally it is opt-in.
+
+WARNING: this suite calls Base.metadata.drop_all() against that URL before
+each test. Point it only at a disposable dev/staging database, never a
+shared or production instance.
 """
 
 from __future__ import annotations
@@ -28,6 +32,10 @@ def _fresh_storage() -> SQLiteScrapeStorage:
     storage = SQLiteScrapeStorage(storage_url=os.environ[MSSQL_URL_ENV])
     # Isolate this test run: a mssql instance is one shared database, not a
     # throwaway file like the sqlite tests get, so reset the schema first.
+    #
+    # WARNING: LINKEDIN_WEB_SCRAPER_TEST_MSSQL_URL must point at a disposable
+    # dev/staging database used only by this test suite, never a shared or
+    # production instance. This drop_all wipes every table this schema owns.
     Base.metadata.drop_all(storage.engine)
     Base.metadata.create_all(storage.engine)
     return storage
