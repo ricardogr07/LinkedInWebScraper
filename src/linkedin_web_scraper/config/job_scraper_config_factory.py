@@ -3,6 +3,7 @@ from __future__ import annotations
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import (
     JobScraperConfig,
+    _normalize_enrichment_provider,
     _normalize_remote_type,
     _normalize_time_posted,
 )
@@ -30,7 +31,7 @@ class JobScraperConfigFactory:
         return JobScraperConfig(
             position=position,
             location=location,
-            enrichment_provider=enrichment_provider,
+            enrichment_provider=_normalize_enrichment_provider(enrichment_provider),
             enrichment_required=enrichment_required,
             enrichment_model=enrichment_model,
             time_posted=_normalize_time_posted(time_posted),
