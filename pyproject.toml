@@ -42,6 +42,9 @@ anthropic = [
   "anthropic>=0.40.0",
   "pydantic>=2.7.0",
 ]
+mssql = [
+  "pyodbc>=5.1.0",
+]
 dev = [
   "anthropic>=0.40.0",
   "build>=1.2.2",

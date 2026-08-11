@@ -1,4 +1,11 @@
-"""SQLite-backed storage adapter for persisted scrape runs."""
+"""SQLAlchemy-backed storage adapter for persisted scrape runs.
+
+Despite the name, this works against any SQLAlchemy-supported dialect (SQLite by
+default, or mssql via a mssql+pyodbc:// storage_url), not only SQLite. The class
+keeps its original name because renaming it is a public-contract break with no
+acceptance-criteria benefit; a rename is a bigger, riskier diff than the fix this
+issue asks for.
+"""
 
 from __future__ import annotations
 
@@ -67,7 +74,7 @@ def _migrate_legacy_columns(engine: Engine) -> None:
 
 
 class SQLiteScrapeStorage(ScrapeStorage):
-    """Persist scrape runs, job snapshots, and enrichments to SQLite."""
+    """Persist scrape runs, job snapshots, and enrichments (SQLite or mssql)."""
 
     def __init__(
         self,
@@ -78,7 +85,10 @@ class SQLiteScrapeStorage(ScrapeStorage):
     ):
         self.logger = resolve_logger(logger, name=__name__)
         self.storage_url = storage_url or build_sqlite_storage_url()
-        self.engine = engine or create_engine(self.storage_url, future=True)
+        # pool_pre_ping: cheap SELECT 1 before reuse so a stale connection (e.g. an
+        # Azure SQL serverless tier resuming from auto-pause) is replaced, not surfaced
+        # as an OperationalError mid-query.
+        self.engine = engine or create_engine(self.storage_url, future=True, pool_pre_ping=True)
         self.session_factory = sessionmaker(self.engine, expire_on_commit=False)
         _migrate_legacy_columns(self.engine)
         Base.metadata.create_all(self.engine)
