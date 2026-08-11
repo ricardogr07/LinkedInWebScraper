@@ -128,11 +128,24 @@ Use `build_sqlite_storage_url()` for a managed default URL, or inject `SQLiteScr
 `SQLiteScrapeStorage` runs against any SQLAlchemy-supported dialect, not only SQLite.
 Point it at Azure SQL (or any mssql server) by setting `LINKEDIN_WEB_SCRAPER_STORAGE_URL`
 to a `mssql+pyodbc://` URL, or by passing that URL as `runtime_config.storage.url` /
-`storage_url=`. Install the `pyodbc` driver dependency with:
+`storage_url=`. Install the `pyodbc` Python package with:
 
 ```bash
 pip install LinkedInWebScraper[mssql]
 ```
+
+`pyodbc` also needs the system-level Microsoft ODBC Driver 18 for SQL Server
+(`msodbcsql18`) installed and on the path, or connections fail with an
+"ODBC Driver 18 ... not found" error. On Ubuntu/Debian:
+
+```bash
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+sudo apt-get update
+ACCEPT_EULA=Y sudo apt-get install -y msodbcsql18 unixodbc-dev
+```
+
+See [Microsoft's ODBC driver install docs](https://learn.microsoft.com/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server) for other platforms.
 
 Text columns use SQLAlchemy's generic `Unicode`/`UnicodeText` types so mssql renders
 them as `NVARCHAR`, keeping non-ASCII text (Spanish job postings, for example)
