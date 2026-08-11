@@ -10,7 +10,11 @@ from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, 
 
 def _default_enrichment_model(provider: EnrichmentProvider) -> str:
     """Return the provider-appropriate default enrichment model."""
-    return DEFAULT_ANTHROPIC_MODEL if provider == EnrichmentProvider.ANTHROPIC else DEFAULT_OPENAI_MODEL
+    return (
+        DEFAULT_ANTHROPIC_MODEL
+        if provider == EnrichmentProvider.ANTHROPIC
+        else DEFAULT_OPENAI_MODEL
+    )
 
 
 def _normalize_time_posted(value: str | TimePosted) -> TimePosted:

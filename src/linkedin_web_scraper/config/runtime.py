@@ -187,7 +187,9 @@ def _apply_legacy_enrichment_keys(data: dict[str, Any]) -> dict[str, Any]:
     """Map pre-rename openai_enabled/openai_model keys onto the new fields."""
     if "openai_enabled" in data:
         openai_enabled = data.pop("openai_enabled")
-        data.setdefault("enrichment_provider", "openai" if _normalize_bool(openai_enabled) else "none")
+        data.setdefault(
+            "enrichment_provider", "openai" if _normalize_bool(openai_enabled) else "none"
+        )
     if "openai_model" in data:
         data.setdefault("enrichment_model", data.pop("openai_model"))
     return data
