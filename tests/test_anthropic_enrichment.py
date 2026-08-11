@@ -5,11 +5,14 @@ import logging
 import pandas as pd
 import pytest
 
+from linkedin_web_scraper.infra.anthropic.anthropic_handler import (
+    AnthropicConfigurationError,
+    AnthropicHandler,
+)
 from linkedin_web_scraper.infra.openai.job_description_processor import JobDescriptionProcessor
 from linkedin_web_scraper.infra.openai.models import JobDescriptionEnrichment
-from linkedin_web_scraper.infra.openai.openai_handler import OpenAIConfigurationError, OpenAIHandler
 
-LOGGER = logging.getLogger("test-openai-enrichment")
+LOGGER = logging.getLogger("test-anthropic-enrichment")
 LOGGER.handlers.clear()
 LOGGER.addHandler(logging.NullHandler())
 
@@ -28,15 +31,15 @@ class FakeParsedResponse:
         self,
         payload: dict[str, object],
         *,
-        response_id: str = "resp_123",
-        model: str = "gpt-4o-mini",
+        response_id: str = "msg_123",
+        model: str = "claude-haiku-4-5-20251001",
     ):
         self.id = response_id
         self.model = model
-        self.output_parsed = FakeParsedPayload(payload)
+        self.parsed_output = FakeParsedPayload(payload)
 
 
-class FakeResponsesAPI:
+class FakeMessagesAPI:
     def __init__(self, response: FakeParsedResponse):
         self.response = response
         self.last_kwargs: dict[str, object] | None = None
@@ -46,9 +49,9 @@ class FakeResponsesAPI:
         return self.response
 
 
-class FakeOpenAIClient:
+class FakeAnthropicClient:
     def __init__(self, response: FakeParsedResponse):
-        self.responses = FakeResponsesAPI(response)
+        self.messages = FakeMessagesAPI(response)
 
 
 class FlakyEnricher:
@@ -65,13 +68,13 @@ class FlakyEnricher:
             years_of_experience="3+ years",
             minimum_level_of_studies="Bachelor",
             english_required=True,
-            model="gpt-4o-mini",
-            response_id="resp_456",
+            model="claude-haiku-4-5-20251001",
+            response_id="msg_456",
             raw_payload={"description": "Short summary", "tech_stack": ["Python", "SQL"]},
         )
 
 
-def test_openai_handler_extracts_structured_enrichment_from_responses_parse():
+def test_anthropic_handler_extracts_structured_enrichment_from_messages_parse():
     payload = {
         "description": "Build data products.",
         "tech_stack": ["Python", "SQL"],
@@ -79,56 +82,31 @@ def test_openai_handler_extracts_structured_enrichment_from_responses_parse():
         "minimum_level_of_studies": "Bachelor's degree",
         "english_required": True,
     }
-    client = FakeOpenAIClient(FakeParsedResponse(payload))
-    handler = OpenAIHandler(client=client)
+    client = FakeAnthropicClient(FakeParsedResponse(payload))
+    handler = AnthropicHandler(client=client)
 
     enrichment = handler.extract_job_description("Build data products.")
 
-    assert client.responses.last_kwargs is not None
-    assert client.responses.last_kwargs["model"] == "gpt-4o-mini"
+    assert client.messages.last_kwargs is not None
+    assert client.messages.last_kwargs["model"] == "claude-haiku-4-5-20251001"
     assert enrichment.short_description == "Build data products."
     assert enrichment.tech_stack == ("Python", "SQL")
     assert enrichment.years_of_experience == "3+ years"
     assert enrichment.minimum_level_of_studies == "Bachelor's degree"
     assert enrichment.english_required is True
-    assert enrichment.model == "gpt-4o-mini"
-    assert enrichment.response_id == "resp_123"
+    assert enrichment.model == "claude-haiku-4-5-20251001"
+    assert enrichment.response_id == "msg_123"
     assert enrichment.raw_payload == payload
 
 
-def test_openai_handler_generate_chat_completion_returns_legacy_shape():
-    client = FakeOpenAIClient(
-        FakeParsedResponse(
-            {
-                "description": "Analyze large datasets.",
-                "tech_stack": ["Python", "Pandas"],
-                "years_of_experience": "N/A",
-                "minimum_level_of_studies": "N/A",
-                "english_required": None,
-            }
-        )
-    )
-    handler = OpenAIHandler(client=client)
+def test_anthropic_handler_requires_api_key_without_injected_client(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-    result = handler.generate_chat_completion(handler.create_messages("Analyze large datasets."))
-
-    assert result == {
-        "Description": "Analyze large datasets.",
-        "TechStack": ["Python", "Pandas"],
-        "YoE": "N/A",
-        "MinLevelStudies": "N/A",
-        "English": "N/A",
-    }
+    with pytest.raises(AnthropicConfigurationError):
+        AnthropicHandler()
 
 
-def test_openai_handler_requires_api_key_without_injected_client(monkeypatch):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-
-    with pytest.raises(OpenAIConfigurationError):
-        OpenAIHandler()
-
-
-def test_job_description_processor_continues_after_per_row_enrichment_failures():
+def test_job_description_processor_works_with_anthropic_handler():
     df_jobs = pd.DataFrame(
         [
             {"JobID": "1", "Description": "works fine"},
@@ -145,8 +123,8 @@ def test_job_description_processor_continues_after_per_row_enrichment_failures()
     assert enriched.loc[0, "YoE"] == "3+ years"
     assert enriched.loc[0, "MinLevelStudies"] == "Bachelor"
     assert enriched.loc[0, "English"] is True
-    assert enriched.loc[0, "EnrichmentModel"] == "gpt-4o-mini"
-    assert enriched.loc[0, "EnrichmentResponseId"] == "resp_456"
+    assert enriched.loc[0, "EnrichmentModel"] == "claude-haiku-4-5-20251001"
+    assert enriched.loc[0, "EnrichmentResponseId"] == "msg_456"
     assert '"description": "Short summary"' in enriched.loc[0, "EnrichmentRawPayload"]
 
     assert enriched.loc[1, "ShortDescription"] == "N/A"
@@ -155,11 +133,3 @@ def test_job_description_processor_continues_after_per_row_enrichment_failures()
 
     assert enriched.loc[2, "ShortDescription"] == "N/A"
     assert enriched.loc[2, "English"] == "N/A"
-
-
-def test_job_description_processor_raises_on_failure_when_enrichment_required():
-    df_jobs = pd.DataFrame([{"JobID": "1", "Description": "raise this one"}])
-    processor = JobDescriptionProcessor(FlakyEnricher(), logger=LOGGER, enrichment_required=True)
-
-    with pytest.raises(RuntimeError, match="boom"):
-        processor.process_job_descriptions(df_jobs)

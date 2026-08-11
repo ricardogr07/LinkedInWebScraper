@@ -43,19 +43,21 @@ jobs = LinkedInJobScraper(logger=logger, config=config).run()
 print(jobs.head())
 ```
 
-## Enable OpenAI Enrichment
+## Enable Enrichment
 
 ```python
 config = JobScraperConfig(
     position="Data Scientist",
     location="Monterrey",
     remote=RemoteType.REMOTE,
-    openai_enabled=True,
-    openai_model="gpt-4o-mini",
+    enrichment_provider="openai",
+    enrichment_model="gpt-4o-mini",
 )
 ```
 
-Set `OPENAI_API_KEY` in the environment before running the scraper. The library does not load `.env` files during import.
+Set `enrichment_provider="anthropic"` and `enrichment_model="claude-haiku-4-5"` to use Anthropic instead; install `LinkedInWebScraper[anthropic]` for that provider.
+
+Set `OPENAI_API_KEY` (or `ANTHROPIC_API_KEY`, matching the selected provider) in the environment before running the scraper. The library does not load `.env` files during import.
 
 For the current PowerShell session on Windows:
 

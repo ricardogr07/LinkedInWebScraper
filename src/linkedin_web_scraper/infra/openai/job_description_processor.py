@@ -1,4 +1,4 @@
-"""Helpers for applying structured OpenAI enrichment to job dataframes."""
+"""Helpers for applying structured enrichment to job dataframes."""
 
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ ENRICHMENT_COLUMN_DEFAULTS: dict[str, object] = {
     "YoE": NOT_AVAILABLE,
     "MinLevelStudies": NOT_AVAILABLE,
     "English": NOT_AVAILABLE,
-    "OpenAIModel": NOT_AVAILABLE,
-    "OpenAIResponseId": NOT_AVAILABLE,
-    "OpenAIRawPayload": "",
+    "EnrichmentModel": NOT_AVAILABLE,
+    "EnrichmentResponseId": NOT_AVAILABLE,
+    "EnrichmentRawPayload": "",
 }
 
 
@@ -28,21 +28,24 @@ class JobDescriptionProcessor:
 
     def __init__(
         self,
-        openai_handler: JobDescriptionEnricher,
+        enricher: JobDescriptionEnricher,
         logger: logging.Logger | Logger | None = None,
+        *,
+        enrichment_required: bool = False,
     ):
-        self.openai_handler = openai_handler
+        self.enricher = enricher
         self.logger = resolve_logger(logger, name=__name__)
+        self.enrichment_required = enrichment_required
 
     def process_job_descriptions(self, df_jobs: pd.DataFrame) -> pd.DataFrame:
         """Process job descriptions and append parsed fields without failing the scrape."""
-        self.logger.info("Processing %s job descriptions using OpenAI enrichment.", len(df_jobs))
+        self.logger.info("Processing %s job descriptions using enrichment.", len(df_jobs))
         enriched_jobs = df_jobs.copy()
         self._ensure_enrichment_columns(enriched_jobs)
         mutable_jobs = cast(Any, enriched_jobs)
 
         if "Description" not in enriched_jobs.columns:
-            self.logger.warning("Description column is missing. Skipping OpenAI enrichment.")
+            self.logger.warning("Description column is missing. Skipping enrichment.")
             return enriched_jobs
 
         for index, row in enriched_jobs.iterrows():
@@ -55,12 +58,15 @@ class JobDescriptionProcessor:
                 continue
 
             try:
-                enrichment = self.openai_handler.extract_job_description(description)
+                enrichment = self.enricher.extract_job_description(description)
             except Exception:
                 self.logger.exception(
-                    "Failed to enrich job description for JobID %s. Leaving row unchanged.",
+                    "Failed to enrich job description for JobID %s.",
                     row.get("JobID", NOT_AVAILABLE),
                 )
+                if self.enrichment_required:
+                    raise
+                self.logger.warning("Leaving row unchanged since enrichment is not required.")
                 continue
 
             mutable_jobs.loc[index, "ShortDescription"] = enrichment.short_description
@@ -68,9 +74,11 @@ class JobDescriptionProcessor:
             mutable_jobs.loc[index, "YoE"] = enrichment.years_of_experience
             mutable_jobs.loc[index, "MinLevelStudies"] = enrichment.minimum_level_of_studies
             mutable_jobs.loc[index, "English"] = enrichment.english_requirement_text
-            mutable_jobs.loc[index, "OpenAIModel"] = enrichment.model or NOT_AVAILABLE
-            mutable_jobs.loc[index, "OpenAIResponseId"] = enrichment.response_id or NOT_AVAILABLE
-            mutable_jobs.loc[index, "OpenAIRawPayload"] = json.dumps(
+            mutable_jobs.loc[index, "EnrichmentModel"] = enrichment.model or NOT_AVAILABLE
+            mutable_jobs.loc[index, "EnrichmentResponseId"] = (
+                enrichment.response_id or NOT_AVAILABLE
+            )
+            mutable_jobs.loc[index, "EnrichmentRawPayload"] = json.dumps(
                 enrichment.raw_payload, ensure_ascii=True, sort_keys=True
             )
 

@@ -21,4 +21,12 @@ class RemoteType(StrEnum):
     HYBRID = "HYBRID"
 
 
-__all__ = ["RemoteType", "TimePosted"]
+class EnrichmentProvider(StrEnum):
+    """Supported job-description enrichment providers."""
+
+    NONE = "NONE"
+    OPENAI = "OPENAI"
+    ANTHROPIC = "ANTHROPIC"
+
+
+__all__ = ["EnrichmentProvider", "RemoteType", "TimePosted"]

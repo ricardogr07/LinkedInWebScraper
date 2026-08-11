@@ -11,18 +11,19 @@ from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
 from linkedin_web_scraper.infra.logging import Logger, resolve_logger
 from linkedin_web_scraper.infra.openai.models import (
     NOT_AVAILABLE,
+    SYSTEM_PROMPT,
+    EnrichmentDependencyError,
     JobDescriptionEnrichment,
     OpenAIEnrichmentConfig,
+    load_response_schema,
 )
-
-SYSTEM_PROMPT = """You extract structured data from job descriptions. Return a concise English summary of the role itself, list the relevant hard skills and technologies, capture explicit experience requirements when present, capture the minimum level of studies when present, and mark whether English proficiency is required. If the source description is in English, treat English as required. Do not include company marketing or unrelated company background in the summary."""
 
 
 class OpenAIConfigurationError(RuntimeError):
     """Raised when OpenAI enrichment is requested without valid configuration."""
 
 
-class OpenAIDependencyError(RuntimeError):
+class OpenAIDependencyError(EnrichmentDependencyError):
     """Raised when optional OpenAI enrichment dependencies are missing."""
 
 
@@ -35,39 +36,6 @@ def _load_openai_client_class() -> type[Any]:
             "OpenAI enrichment requires the optional dependencies installed via `.[openai]`."
         ) from exc
     return OpenAI
-
-
-@lru_cache(maxsize=1)
-def _load_response_schema() -> type[Any]:
-    try:
-        from pydantic import BaseModel, Field
-    except ImportError as exc:
-        raise OpenAIDependencyError(
-            "Structured OpenAI parsing requires the optional dependencies installed via `.[openai]`."
-        ) from exc
-
-    class JobDescriptionSchema(BaseModel):
-        description: str = Field(
-            description="A concise English summary of the job responsibilities only."
-        )
-        tech_stack: list[str] = Field(
-            default_factory=list,
-            description="Relevant programming languages, tools, frameworks, and hard skills.",
-        )
-        years_of_experience: str = Field(
-            default=NOT_AVAILABLE,
-            description="Experience requirement as written in the job description, or N/A.",
-        )
-        minimum_level_of_studies: str = Field(
-            default=NOT_AVAILABLE,
-            description="Minimum education requirement, or N/A if not stated.",
-        )
-        english_required: bool | None = Field(
-            default=None,
-            description="True when English proficiency is required or clearly implied.",
-        )
-
-    return JobDescriptionSchema
 
 
 class OpenAIHandler:
@@ -121,7 +89,7 @@ class OpenAIHandler:
         response = self.client.responses.parse(
             model=self.config.model,
             input=self.create_messages(normalized_description),
-            text_format=_load_response_schema(),
+            text_format=load_response_schema(),
         )
         parsed = getattr(response, "output_parsed", None)
         if parsed is None:

@@ -8,6 +8,7 @@ import pytest
 from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScraper
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
+from linkedin_web_scraper.config.options import EnrichmentProvider
 from linkedin_web_scraper.domain.job_title_classifier import JobTitleClassifier
 from linkedin_web_scraper.infra.openai.models import JobDescriptionEnrichment
 from linkedin_web_scraper.infra.openai.openai_handler import OpenAIConfigurationError
@@ -189,7 +190,7 @@ def test_linkedin_job_scraper_uses_injected_openai_enricher():
     config = JobScraperConfig(
         position="Data Scientist",
         location="Monterrey",
-        openai_enabled=True,
+        enrichment_provider=EnrichmentProvider.OPENAI,
     )
 
     scraper = LinkedInJobScraper(
@@ -197,14 +198,14 @@ def test_linkedin_job_scraper_uses_injected_openai_enricher():
         config=config,
         job_scraper=fake_job_scraper,
         job_data_cleaner=fake_cleaner,
-        openai_handler=FakeEnricher(),
+        enricher=FakeEnricher(),
     )
 
     jobs = scraper.run()
 
     assert jobs["ShortDescription"].tolist() == ["Summarized description"]
     assert jobs["TechStack"].tolist() == ["Python, SQL"]
-    assert jobs["OpenAIModel"].tolist() == ["gpt-4o-mini"]
+    assert jobs["EnrichmentModel"].tolist() == ["gpt-4o-mini"]
     assert jobs["YoE"].tolist() == ["3+ years"]
     assert jobs["FinalProcessed"].tolist() == [True]
 
@@ -216,7 +217,7 @@ def test_linkedin_job_scraper_returns_cleaned_jobs_when_openai_setup_fails(monke
     config = JobScraperConfig(
         position="Data Scientist",
         location="Monterrey",
-        openai_enabled=True,
+        enrichment_provider=EnrichmentProvider.OPENAI,
     )
 
     scraper = LinkedInJobScraper(
@@ -238,7 +239,7 @@ def test_linkedin_job_scraper_raises_when_required_enrichment_is_unavailable(mon
     config = JobScraperConfig(
         position="Data Scientist",
         location="Monterrey",
-        openai_enabled=True,
+        enrichment_provider=EnrichmentProvider.OPENAI,
         enrichment_required=True,
     )
 
@@ -256,7 +257,7 @@ def test_linkedin_job_scraper_enriches_when_required_enrichment_is_available():
     config = JobScraperConfig(
         position="Data Scientist",
         location="Monterrey",
-        openai_enabled=True,
+        enrichment_provider=EnrichmentProvider.OPENAI,
         enrichment_required=True,
     )
 
@@ -265,7 +266,7 @@ def test_linkedin_job_scraper_enriches_when_required_enrichment_is_available():
         config=config,
         job_scraper=fake_job_scraper,
         job_data_cleaner=FakeCleaner(),
-        openai_handler=FakeEnricher(),
+        enricher=FakeEnricher(),
     )
 
     jobs = scraper.run()

@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
-from linkedin_web_scraper.config.options import RemoteType, TimePosted
+from linkedin_web_scraper.config.job_scraper_config import _default_enrichment_model
+from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, TimePosted
 from linkedin_web_scraper.config.storage import DEFAULT_SQLITE_DB_FILE
 
 DEFAULT_RUNTIME_CONFIG_FILE = Path("runtime.toml")
@@ -54,6 +54,12 @@ def _normalize_remote_type(value: str | RemoteType) -> RemoteType:
     return RemoteType(normalized)
 
 
+def _normalize_enrichment_provider(value: str | EnrichmentProvider) -> EnrichmentProvider:
+    if isinstance(value, EnrichmentProvider):
+        return value
+    return EnrichmentProvider(str(value).strip().upper())
+
+
 def _normalize_remote_types(
     values: Sequence[str | RemoteType] | None,
 ) -> tuple[RemoteType, ...]:
@@ -94,9 +100,9 @@ class ScrapeOnceRuntimeConfig:
 
     position: str = "Data Scientist"
     location: str = "Monterrey"
-    openai_enabled: bool = False
+    enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE
     enrichment_required: bool = False
-    openai_model: str = DEFAULT_OPENAI_MODEL
+    enrichment_model: str = ""
     time_posted: TimePosted = TimePosted.DAY
     remote_types: tuple[RemoteType, ...] = DEFAULT_RUNTIME_REMOTE_TYPES
     file_name: str | None = None
@@ -106,9 +112,11 @@ class ScrapeOnceRuntimeConfig:
     def __post_init__(self) -> None:
         self.position = str(self.position).strip()
         self.location = str(self.location).strip()
-        self.openai_enabled = _normalize_bool(self.openai_enabled)
+        self.enrichment_provider = _normalize_enrichment_provider(self.enrichment_provider)
         self.enrichment_required = _normalize_bool(self.enrichment_required)
-        self.openai_model = str(self.openai_model).strip() or DEFAULT_OPENAI_MODEL
+        self.enrichment_model = str(self.enrichment_model).strip() or _default_enrichment_model(
+            self.enrichment_provider
+        )
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.remote_types = _normalize_remote_types(self.remote_types)
         self.file_name = _normalize_string(self.file_name)
@@ -122,9 +130,9 @@ class ScrapeDailyRuntimeConfig:
 
     cities: tuple[str, ...] = DEFAULT_RUNTIME_CITIES
     position: str = "Data Scientist"
-    openai_enabled: bool = False
+    enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE
     enrichment_required: bool = False
-    openai_model: str = DEFAULT_OPENAI_MODEL
+    enrichment_model: str = ""
     time_posted: TimePosted = TimePosted.DAY
     output_dir: str | None = None
     combined_file_name: str | None = None
@@ -132,9 +140,11 @@ class ScrapeDailyRuntimeConfig:
     def __post_init__(self) -> None:
         self.cities = tuple(str(city).strip() for city in self.cities if str(city).strip())
         self.position = str(self.position).strip()
-        self.openai_enabled = _normalize_bool(self.openai_enabled)
+        self.enrichment_provider = _normalize_enrichment_provider(self.enrichment_provider)
         self.enrichment_required = _normalize_bool(self.enrichment_required)
-        self.openai_model = str(self.openai_model).strip() or DEFAULT_OPENAI_MODEL
+        self.enrichment_model = str(self.enrichment_model).strip() or _default_enrichment_model(
+            self.enrichment_provider
+        )
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.output_dir = _normalize_string(self.output_dir)
         self.combined_file_name = _normalize_string(self.combined_file_name)
@@ -173,13 +183,29 @@ def _coerce_mapping(value: object, label: str) -> Mapping[str, Any]:
     return {str(key): inner_value for key, inner_value in value.items()}
 
 
+def _apply_legacy_enrichment_keys(data: dict[str, Any]) -> dict[str, Any]:
+    """Map pre-rename openai_enabled/openai_model keys onto the new fields."""
+    if "openai_enabled" in data:
+        openai_enabled = data.pop("openai_enabled")
+        data.setdefault(
+            "enrichment_provider", "openai" if _normalize_bool(openai_enabled) else "none"
+        )
+    if "openai_model" in data:
+        data.setdefault("enrichment_model", data.pop("openai_model"))
+    return data
+
+
 def runtime_config_from_mapping(data: Mapping[str, Any]) -> RuntimeConfig:
     """Build a runtime config object from TOML-compatible nested mappings."""
     logging_data = _coerce_mapping(data.get("logging"), "logging")
     storage_data = _coerce_mapping(data.get("storage"), "storage")
     scrape_data = _coerce_mapping(data.get("scrape"), "scrape")
-    scrape_once_data = _coerce_mapping(scrape_data.get("once"), "scrape.once")
-    scrape_daily_data = _coerce_mapping(scrape_data.get("daily"), "scrape.daily")
+    scrape_once_data = _apply_legacy_enrichment_keys(
+        dict(_coerce_mapping(scrape_data.get("once"), "scrape.once"))
+    )
+    scrape_daily_data = _apply_legacy_enrichment_keys(
+        dict(_coerce_mapping(scrape_data.get("daily"), "scrape.daily"))
+    )
     export_data = _coerce_mapping(data.get("export"), "export")
 
     return RuntimeConfig(
@@ -225,11 +251,11 @@ def apply_environment_overrides(
         config.scrape_daily.output_dir = normalized_output_dir
         config.export.output_dir = normalized_output_dir
 
-    openai_enabled = environment.get("LINKEDIN_WEB_SCRAPER_OPENAI_ENABLED")
-    if openai_enabled is not None:
-        normalized_openai_enabled = _normalize_bool(openai_enabled)
-        config.scrape_once.openai_enabled = normalized_openai_enabled
-        config.scrape_daily.openai_enabled = normalized_openai_enabled
+    enrichment_provider = environment.get("LINKEDIN_WEB_SCRAPER_ENRICHMENT_PROVIDER")
+    if enrichment_provider is not None:
+        normalized_provider = _normalize_enrichment_provider(enrichment_provider)
+        config.scrape_once.enrichment_provider = normalized_provider
+        config.scrape_daily.enrichment_provider = normalized_provider
 
     enrichment_required = environment.get("LINKEDIN_WEB_SCRAPER_ENRICHMENT_REQUIRED")
     if enrichment_required is not None:
@@ -237,11 +263,11 @@ def apply_environment_overrides(
         config.scrape_once.enrichment_required = normalized_enrichment_required
         config.scrape_daily.enrichment_required = normalized_enrichment_required
 
-    openai_model = environment.get("LINKEDIN_WEB_SCRAPER_OPENAI_MODEL")
-    if openai_model:
-        normalized_openai_model = str(openai_model).strip()
-        config.scrape_once.openai_model = normalized_openai_model
-        config.scrape_daily.openai_model = normalized_openai_model
+    enrichment_model = environment.get("LINKEDIN_WEB_SCRAPER_ENRICHMENT_MODEL")
+    if enrichment_model:
+        normalized_enrichment_model = str(enrichment_model).strip()
+        config.scrape_once.enrichment_model = normalized_enrichment_model
+        config.scrape_daily.enrichment_model = normalized_enrichment_model
 
     return config
 

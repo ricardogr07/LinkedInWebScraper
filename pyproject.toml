@@ -13,7 +13,7 @@ license-files = ["LICENSE"]
 authors = [
   { name = "Ricardo Garcia Ramirez", email = "rgr.5882@gmail.com" },
 ]
-keywords = ["linkedin", "scraper", "jobs", "openai", "pandas", "sqlite"]
+keywords = ["linkedin", "scraper", "jobs", "openai", "anthropic", "pandas", "sqlite"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -38,7 +38,12 @@ openai = [
   "openai>=2.29.0",
   "pydantic>=2.7.0",
 ]
+anthropic = [
+  "anthropic>=0.40.0",
+  "pydantic>=2.7.0",
+]
 dev = [
+  "anthropic>=0.40.0",
   "build>=1.2.2",
   "coverage[toml]>=7.6.0",
   "mkdocs>=1.6.1",
@@ -108,6 +113,7 @@ project-includes = [
   "src/linkedin_web_scraper/config/job_scraper_advanced_config.py",
   "src/linkedin_web_scraper/config/job_scraper_config_factory.py",
   "src/linkedin_web_scraper/config/openai.py",
+  "src/linkedin_web_scraper/config/anthropic.py",
   "src/linkedin_web_scraper/config/storage.py",
   "src/linkedin_web_scraper/config/options.py",
   "src/linkedin_web_scraper/config/runtime.py",
@@ -126,6 +132,7 @@ project-includes = [
   "src/linkedin_web_scraper/infra/openai/models.py",
   "src/linkedin_web_scraper/infra/openai/openai_handler.py",
   "src/linkedin_web_scraper/infra/openai/job_description_processor.py",
+  "src/linkedin_web_scraper/infra/anthropic/anthropic_handler.py",
   "src/linkedin_web_scraper/infra/storage/models.py",
   "src/linkedin_web_scraper/infra/storage/sqlite.py",
 ]

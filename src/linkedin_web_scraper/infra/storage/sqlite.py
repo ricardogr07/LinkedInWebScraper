@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import create_engine, delete, select
+from sqlalchemy import create_engine, delete, inspect, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -34,10 +34,36 @@ ENRICHMENT_COLUMNS = (
     "YoE",
     "MinLevelStudies",
     "English",
-    "OpenAIModel",
-    "OpenAIResponseId",
-    "OpenAIRawPayload",
+    "EnrichmentModel",
+    "EnrichmentResponseId",
+    "EnrichmentRawPayload",
 )
+
+# Legacy sqlite column names from before the openai-to-enrichment rename, keyed
+# by table name. Scoped strictly to this known rename, not a migration framework.
+_LEGACY_COLUMN_RENAMES: dict[str, dict[str, str]] = {
+    "scrape_runs": {"openai_enabled": "enrichment_provider"},
+    "job_enrichments": {
+        "openai_model": "enrichment_model",
+        "openai_response_id": "enrichment_response_id",
+    },
+}
+
+
+def _migrate_legacy_columns(engine: Engine) -> None:
+    """Rename pre-rename legacy columns in place, if an old schema is found."""
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    with engine.begin() as connection:
+        for table_name, renames in _LEGACY_COLUMN_RENAMES.items():
+            if table_name not in existing_tables:
+                continue
+            existing_columns = {col["name"] for col in inspector.get_columns(table_name)}
+            for old_name, new_name in renames.items():
+                if old_name in existing_columns and new_name not in existing_columns:
+                    connection.execute(
+                        text(f"ALTER TABLE {table_name} RENAME COLUMN {old_name} TO {new_name}")
+                    )
 
 
 class SQLiteScrapeStorage(ScrapeStorage):
@@ -54,6 +80,7 @@ class SQLiteScrapeStorage(ScrapeStorage):
         self.storage_url = storage_url or build_sqlite_storage_url()
         self.engine = engine or create_engine(self.storage_url, future=True)
         self.session_factory = sessionmaker(self.engine, expire_on_commit=False)
+        _migrate_legacy_columns(self.engine)
         Base.metadata.create_all(self.engine)
 
     def begin_run(self, context: ScrapeRunContext) -> str:
@@ -63,7 +90,7 @@ class SQLiteScrapeStorage(ScrapeStorage):
             id=run_id,
             position=context.position,
             location=context.location,
-            openai_enabled=context.openai_enabled,
+            enrichment_provider=context.enrichment_provider,
             time_posted=context.time_posted,
             remote_types_json=json.dumps(list(context.remote_types), ensure_ascii=True),
             output_path=context.output_path,
@@ -223,9 +250,9 @@ class SQLiteScrapeStorage(ScrapeStorage):
             years_of_experience=self._stringify(values.get("YoE")),
             minimum_level_of_studies=self._stringify(values.get("MinLevelStudies")),
             english_requirement=english_text,
-            openai_model=self._stringify(values.get("OpenAIModel")),
-            openai_response_id=self._stringify(values.get("OpenAIResponseId")),
-            raw_payload_json=self._stringify(values.get("OpenAIRawPayload")),
+            enrichment_model=self._stringify(values.get("EnrichmentModel")),
+            enrichment_response_id=self._stringify(values.get("EnrichmentResponseId")),
+            raw_payload_json=self._stringify(values.get("EnrichmentRawPayload")),
         )
 
     @staticmethod
