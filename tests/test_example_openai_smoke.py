@@ -24,8 +24,8 @@ class FakeConfig:
     position: str
     location: str
     remote: str
-    openai_enabled: bool
-    openai_model: str
+    enrichment_provider: str
+    enrichment_model: str
 
 
 class FakeScraper:
@@ -39,7 +39,7 @@ class FakeScraper:
                 {
                     "Title": "Data Scientist",
                     "Company": "Acme Corp",
-                    "OpenAIEnabled": self.config.openai_enabled,
+                    "EnrichmentProvider": self.config.enrichment_provider,
                 }
             ]
         )
@@ -58,4 +58,4 @@ def test_example_openai_script_smoke(monkeypatch):
     runpy.run_path(str(ROOT / "examples" / "example_openai.py"), run_name="__main__")
 
     assert captured
-    assert captured[-1][0].to_string(index=False).find("True") != -1
+    assert captured[-1][0].to_string(index=False).find("OPENAI") != -1

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -25,7 +25,7 @@ class ScrapeRunRecord(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     position: Mapped[str] = mapped_column(String(255), nullable=False)
     location: Mapped[str] = mapped_column(String(255), nullable=False)
-    openai_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    enrichment_provider: Mapped[str] = mapped_column(String(32), nullable=False, default="NONE")
     time_posted: Mapped[str] = mapped_column(String(32), nullable=False)
     remote_types_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     output_path: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -79,7 +79,7 @@ class JobSnapshotRecord(Base):
 
 
 class JobEnrichmentRecord(Base):
-    """Persist the structured OpenAI enrichment values for one run and job."""
+    """Persist the structured enrichment values for one run and job."""
 
     __tablename__ = "job_enrichments"
     __table_args__ = (UniqueConstraint("run_id", "job_id", name="uq_job_enrichment_run_job"),)
@@ -92,8 +92,8 @@ class JobEnrichmentRecord(Base):
     years_of_experience: Mapped[str | None] = mapped_column(Text, nullable=True)
     minimum_level_of_studies: Mapped[str | None] = mapped_column(Text, nullable=True)
     english_requirement: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    openai_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    openai_response_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    enrichment_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    enrichment_response_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     raw_payload_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow

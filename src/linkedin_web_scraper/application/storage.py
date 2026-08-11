@@ -14,7 +14,7 @@ class ScrapeRunContext:
 
     position: str
     location: str
-    openai_enabled: bool
+    enrichment_provider: str
     time_posted: str
     remote_types: tuple[str, ...] = ()
     output_path: str | None = None
@@ -23,6 +23,7 @@ class ScrapeRunContext:
     def __post_init__(self) -> None:
         self.position = self.position.strip()
         self.location = self.location.strip()
+        self.enrichment_provider = str(self.enrichment_provider).strip().upper()
         self.time_posted = str(self.time_posted).strip().upper()
         self.remote_types = tuple(str(remote).strip() for remote in self.remote_types)
         self.metadata = dict(self.metadata)

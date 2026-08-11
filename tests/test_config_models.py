@@ -13,14 +13,14 @@ def test_job_scraper_config_normalizes_string_inputs():
     config = JobScraperConfig(
         position="  Data Scientist  ",
         location=" Monterrey ",
-        openai_model="  gpt-4o-mini  ",
+        enrichment_model="  gpt-4o-mini  ",
         time_posted="day",
         remote="remote",
     )
 
     assert config.position == "Data Scientist"
     assert config.location == "Monterrey"
-    assert config.openai_model == "gpt-4o-mini"
+    assert config.enrichment_model == "gpt-4o-mini"
     assert config.time_posted is TimePosted.DAY
     assert config.remote is RemoteType.REMOTE
 
@@ -29,12 +29,12 @@ def test_job_scraper_config_factory_normalizes_user_facing_inputs():
     config = JobScraperConfigFactory.create(
         position="Data Scientist",
         location="Monterrey",
-        openai_model="gpt-4.1-mini",
+        enrichment_model="gpt-4.1-mini",
         time_posted="week",
         remote="hybrid",
     )
 
-    assert config.openai_model == "gpt-4.1-mini"
+    assert config.enrichment_model == "gpt-4.1-mini"
     assert config.time_posted is TimePosted.WEEK
     assert config.remote is RemoteType.HYBRID
 

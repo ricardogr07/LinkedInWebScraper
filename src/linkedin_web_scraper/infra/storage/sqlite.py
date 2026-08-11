@@ -34,9 +34,9 @@ ENRICHMENT_COLUMNS = (
     "YoE",
     "MinLevelStudies",
     "English",
-    "OpenAIModel",
-    "OpenAIResponseId",
-    "OpenAIRawPayload",
+    "EnrichmentModel",
+    "EnrichmentResponseId",
+    "EnrichmentRawPayload",
 )
 
 
@@ -63,7 +63,7 @@ class SQLiteScrapeStorage(ScrapeStorage):
             id=run_id,
             position=context.position,
             location=context.location,
-            openai_enabled=context.openai_enabled,
+            enrichment_provider=context.enrichment_provider,
             time_posted=context.time_posted,
             remote_types_json=json.dumps(list(context.remote_types), ensure_ascii=True),
             output_path=context.output_path,
@@ -223,9 +223,9 @@ class SQLiteScrapeStorage(ScrapeStorage):
             years_of_experience=self._stringify(values.get("YoE")),
             minimum_level_of_studies=self._stringify(values.get("MinLevelStudies")),
             english_requirement=english_text,
-            openai_model=self._stringify(values.get("OpenAIModel")),
-            openai_response_id=self._stringify(values.get("OpenAIResponseId")),
-            raw_payload_json=self._stringify(values.get("OpenAIRawPayload")),
+            enrichment_model=self._stringify(values.get("EnrichmentModel")),
+            enrichment_response_id=self._stringify(values.get("EnrichmentResponseId")),
+            raw_payload_json=self._stringify(values.get("EnrichmentRawPayload")),
         )
 
     @staticmethod

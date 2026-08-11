@@ -8,13 +8,14 @@ import pandas as pd
 from linkedin_web_scraper import JobScraperConfigFactory, Logger
 from linkedin_web_scraper.application.daily_scrape_service import DailyScrapeService
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
+from linkedin_web_scraper.config.options import EnrichmentProvider
 from linkedin_web_scraper.interfaces.cli.main import main as cli_main
 
 
 def run_ds_daily_scraper(
     logger: Logger,
-    openai_enabled: bool = False,
-    openai_model: str = DEFAULT_OPENAI_MODEL,
+    enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE,
+    enrichment_model: str = DEFAULT_OPENAI_MODEL,
     position: str = "Data Scientist",
     location: str = "Monterrey",
     time_posted: str = "DAY",
@@ -26,8 +27,8 @@ def run_ds_daily_scraper(
     return service.run_for_location(
         position=position,
         location=location,
-        openai_enabled=openai_enabled,
-        openai_model=openai_model,
+        enrichment_provider=enrichment_provider,
+        enrichment_model=enrichment_model,
         time_posted=time_posted,
         file_name=file_name,
         output_dir=output_dir,

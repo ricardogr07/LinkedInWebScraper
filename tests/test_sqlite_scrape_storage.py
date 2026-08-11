@@ -29,7 +29,7 @@ def test_sqlite_scrape_storage_persists_run_snapshots_and_enrichments():
     context = ScrapeRunContext(
         position="Data Scientist",
         location="Monterrey",
-        openai_enabled=True,
+        enrichment_provider="OPENAI",
         time_posted="DAY",
         remote_types=("REMOTE", "HYBRID"),
         output_path="artifacts/jobs/test.csv",
@@ -50,9 +50,9 @@ def test_sqlite_scrape_storage_persists_run_snapshots_and_enrichments():
                 "YoE": "3+ years",
                 "MinLevelStudies": "Bachelor",
                 "English": True,
-                "OpenAIModel": "gpt-4o-mini",
-                "OpenAIResponseId": "resp_123",
-                "OpenAIRawPayload": '{"description": "Build ML pipelines and deploy models."}',
+                "EnrichmentModel": "gpt-4o-mini",
+                "EnrichmentResponseId": "resp_123",
+                "EnrichmentRawPayload": '{"description": "Build ML pipelines and deploy models."}',
             },
             {
                 "JobID": "1234567891",
@@ -107,7 +107,7 @@ def test_sqlite_scrape_storage_returns_empty_frame_for_runs_without_snapshots():
         ScrapeRunContext(
             position="Data Scientist",
             location="Monterrey",
-            openai_enabled=False,
+            enrichment_provider="NONE",
             time_posted="DAY",
         )
     )
@@ -132,7 +132,7 @@ def test_sqlite_scrape_storage_deduplicates_duplicate_job_ids_within_one_run():
         ScrapeRunContext(
             position="Data Scientist",
             location="Monterrey",
-            openai_enabled=False,
+            enrichment_provider="NONE",
             time_posted="DAY",
         )
     )

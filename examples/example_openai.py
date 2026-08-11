@@ -7,8 +7,8 @@ config = JobScraperConfig(
     position="Data Analyst",
     location="San Francisco",
     remote="REMOTE",
-    openai_enabled=True,
-    openai_model="gpt-4o-mini",
+    enrichment_provider="OPENAI",
+    enrichment_model="gpt-4o-mini",
 )
 
 # Initialize the scraper

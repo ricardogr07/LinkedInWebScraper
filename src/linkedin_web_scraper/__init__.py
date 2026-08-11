@@ -9,6 +9,7 @@ from linkedin_web_scraper.application.daily_scrape_service import (
     resolve_output_path,
 )
 from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScraper
+from linkedin_web_scraper.config.anthropic import DEFAULT_ANTHROPIC_MODEL
 from linkedin_web_scraper.config.constants import (
     DATA_SCIENCE_KEYWORDS,
     LOCATION_MAPPING,
@@ -21,7 +22,7 @@ from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAd
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
-from linkedin_web_scraper.config.options import RemoteType, TimePosted
+from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, TimePosted
 from linkedin_web_scraper.config.runtime import (
     DEFAULT_RUNTIME_CONFIG_FILE,
     ExportRuntimeConfig,
@@ -35,6 +36,11 @@ from linkedin_web_scraper.config.runtime import (
 from linkedin_web_scraper.config.storage import DEFAULT_SQLITE_DB_FILE, build_sqlite_storage_url
 from linkedin_web_scraper.domain.job_data_cleaner import JobDataCleaner
 from linkedin_web_scraper.domain.job_title_classifier import JobTitleClassifier
+from linkedin_web_scraper.infra.anthropic.anthropic_handler import (
+    AnthropicConfigurationError,
+    AnthropicDependencyError,
+    AnthropicHandler,
+)
 from linkedin_web_scraper.infra.http.job_scraper import JobScraper
 from linkedin_web_scraper.infra.http.utils import fetch_until_success, get_random_header
 from linkedin_web_scraper.infra.logging import Logger, configure_logging, get_logger, resolve_logger
@@ -54,7 +60,11 @@ from linkedin_web_scraper.infra.storage.file_manager import FileManager
 from linkedin_web_scraper.infra.storage.sqlite import SQLiteScrapeStorage
 
 __all__ = [
+    "AnthropicConfigurationError",
+    "AnthropicDependencyError",
+    "AnthropicHandler",
     "DATA_SCIENCE_KEYWORDS",
+    "DEFAULT_ANTHROPIC_MODEL",
     "DEFAULT_DAILY_CITIES",
     "DEFAULT_OPENAI_MODEL",
     "DEFAULT_REMOTE_TYPES",
@@ -62,6 +72,7 @@ __all__ = [
     "DEFAULT_SQLITE_DB_FILE",
     "DEFAULT_STATE_DIR",
     "DailyScrapeService",
+    "EnrichmentProvider",
     "ExportRuntimeConfig",
     "FileManager",
     "JobDataCleaner",

@@ -10,8 +10,8 @@ This project supports typed programmatic config and TOML-driven runtime config.
 
 - `position`: job title or search phrase
 - `location`: LinkedIn location text
-- `openai_enabled`: enable optional description enrichment
-- `openai_model`: model name for optional OpenAI enrichment, default `gpt-4o-mini`
+- `enrichment_provider`: `none`, `openai`, or `anthropic`, default `none`
+- `enrichment_model`: model name for the selected provider, defaults to `gpt-4o-mini` for OpenAI and `claude-haiku-4-5-20251001` for Anthropic
 - `time_posted`: `TimePosted` enum value or matching string
 - `remote`: `RemoteType` enum value or matching string
 - `distance`: search radius
@@ -46,8 +46,8 @@ state_dir = "artifacts/state"
 [scrape.once]
 position = "Data Scientist"
 location = "Monterrey"
-openai_enabled = false
-openai_model = "gpt-4o-mini"
+enrichment_provider = "none"
+enrichment_model = "gpt-4o-mini"
 time_posted = "DAY"
 remote_types = ["REMOTE", "HYBRID", "ON-SITE"]
 file_name = "LinkedIn_Jobs_Data_Scientist_Monterrey.csv"
@@ -57,8 +57,8 @@ append = true
 [scrape.daily]
 cities = ["Monterrey", "Guadalajara", "Mexico City"]
 position = "Data Scientist"
-openai_enabled = false
-openai_model = "gpt-4o-mini"
+enrichment_provider = "none"
+enrichment_model = "gpt-4o-mini"
 time_posted = "DAY"
 output_dir = "artifacts/jobs"
 combined_file_name = "LinkedIn_Jobs_Data_Scientist_Mexico.csv"
@@ -87,18 +87,19 @@ Supported env overrides include:
 - `LINKEDIN_WEB_SCRAPER_STORAGE_FILE`
 - `LINKEDIN_WEB_SCRAPER_STATE_DIR`
 - `LINKEDIN_WEB_SCRAPER_OUTPUT_DIR`
-- `LINKEDIN_WEB_SCRAPER_OPENAI_ENABLED`
-- `LINKEDIN_WEB_SCRAPER_OPENAI_MODEL`
+- `LINKEDIN_WEB_SCRAPER_ENRICHMENT_PROVIDER`
+- `LINKEDIN_WEB_SCRAPER_ENRICHMENT_REQUIRED`
+- `LINKEDIN_WEB_SCRAPER_ENRICHMENT_MODEL`
 
-## OpenAI Runtime Behavior
+## Enrichment Runtime Behavior
 
-OpenAI support remains optional.
+Enrichment is optional and provider-selectable through `enrichment_provider` (`none`, `openai`, or `anthropic`).
 
-- Install `LinkedInWebScraper[openai]`
-- Set `OPENAI_API_KEY` in the environment
+- Install `LinkedInWebScraper[openai]` or `LinkedInWebScraper[anthropic]` to match the selected provider
+- Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in the environment, matching the selected provider
 - Keep secrets out of TOML and out of the repo
-- Enrichment setup or request failures fall back to the non-enriched dataset
-- Enriched rows include audit fields such as `OpenAIModel`, `OpenAIResponseId`, and `OpenAIRawPayload`
+- By default, enrichment setup or request failures fall back to the non-enriched dataset; set `enrichment_required = true` to fail the run instead
+- Enriched rows include audit fields such as `EnrichmentModel`, `EnrichmentResponseId`, and `EnrichmentRawPayload`
 
 ## Artifact And State Paths
 

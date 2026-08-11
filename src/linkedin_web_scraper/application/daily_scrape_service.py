@@ -10,7 +10,7 @@ from linkedin_web_scraper.application.linkedin_job_scraper import LinkedInJobScr
 from linkedin_web_scraper.application.storage import ScrapeRunContext, ScrapeStorage
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
-from linkedin_web_scraper.config.options import RemoteType, TimePosted
+from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, TimePosted
 from linkedin_web_scraper.infra.logging import resolve_logger
 from linkedin_web_scraper.infra.paths import resolve_jobs_output_path
 from linkedin_web_scraper.infra.storage.file_manager import FileManager
@@ -60,9 +60,9 @@ class DailyScrapeService:
         *,
         position: str = "Data Scientist",
         location: str = "Monterrey",
-        openai_enabled: bool = False,
+        enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE,
         enrichment_required: bool = False,
-        openai_model: str = DEFAULT_OPENAI_MODEL,
+        enrichment_model: str = DEFAULT_OPENAI_MODEL,
         time_posted: str | TimePosted = TimePosted.DAY,
         remote_types: Sequence[str | RemoteType] = DEFAULT_REMOTE_TYPES,
         file_name: str | None = None,
@@ -75,9 +75,9 @@ class DailyScrapeService:
         file_manager_config = self.config_factory.create(
             position=position,
             location=location,
-            openai_enabled=openai_enabled,
+            enrichment_provider=enrichment_provider,
             enrichment_required=enrichment_required,
-            openai_model=openai_model,
+            enrichment_model=enrichment_model,
             time_posted=time_posted,
             remote=RemoteType.ALL,
         )
@@ -93,11 +93,11 @@ class DailyScrapeService:
         run_context = ScrapeRunContext(
             position=position,
             location=location,
-            openai_enabled=openai_enabled,
+            enrichment_provider=enrichment_provider,
             time_posted=str(time_posted),
             remote_types=tuple(str(remote) for remote in remote_types),
             output_path=target_output_path,
-            metadata={"openai_model": openai_model},
+            metadata={"enrichment_model": enrichment_model},
         )
         run_id = self.storage.begin_run(run_context)
 
@@ -107,9 +107,9 @@ class DailyScrapeService:
                 config = self.config_factory.create(
                     position=position,
                     location=location,
-                    openai_enabled=openai_enabled,
+                    enrichment_provider=enrichment_provider,
                     enrichment_required=enrichment_required,
-                    openai_model=openai_model,
+                    enrichment_model=enrichment_model,
                     time_posted=time_posted,
                     remote=remote,
                 )
@@ -156,9 +156,9 @@ class DailyScrapeService:
         *,
         cities: Sequence[str] = DEFAULT_DAILY_CITIES,
         position: str = "Data Scientist",
-        openai_enabled: bool = False,
+        enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE,
         enrichment_required: bool = False,
-        openai_model: str = DEFAULT_OPENAI_MODEL,
+        enrichment_model: str = DEFAULT_OPENAI_MODEL,
         time_posted: str | TimePosted = TimePosted.DAY,
         output_dir: str | Path | None = None,
         combined_file_name: str | None = None,
@@ -177,9 +177,9 @@ class DailyScrapeService:
                 self.run_for_location(
                     position=position,
                     location=city,
-                    openai_enabled=openai_enabled,
+                    enrichment_provider=enrichment_provider,
                     enrichment_required=enrichment_required,
-                    openai_model=openai_model,
+                    enrichment_model=enrichment_model,
                     time_posted=time_posted,
                     file_name=city_file_name,
                     output_dir=output_dir,
@@ -197,9 +197,9 @@ class DailyScrapeService:
         combined_config = self.config_factory.create(
             position=position,
             location="Mexico",
-            openai_enabled=openai_enabled,
+            enrichment_provider=enrichment_provider,
             enrichment_required=enrichment_required,
-            openai_model=openai_model,
+            enrichment_model=enrichment_model,
             time_posted=time_posted,
             remote=RemoteType.ALL,
         )

@@ -7,8 +7,10 @@ import logging
 import pandas as pd
 
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
+from linkedin_web_scraper.config.options import EnrichmentProvider
 from linkedin_web_scraper.domain.job_data_cleaner import JobDataCleaner
 from linkedin_web_scraper.domain.job_title_classifier import JobTitleClassifier
+from linkedin_web_scraper.infra.anthropic.anthropic_handler import AnthropicHandler
 from linkedin_web_scraper.infra.http.job_scraper import JobScraper
 from linkedin_web_scraper.infra.logging import Logger, resolve_logger
 from linkedin_web_scraper.infra.openai.job_description_processor import JobDescriptionProcessor
@@ -31,7 +33,7 @@ class LinkedInJobScraper:
         *,
         job_scraper: JobScraper | None = None,
         job_data_cleaner: JobDataCleaner | None = None,
-        openai_handler: JobDescriptionEnricher | None = None,
+        enricher: JobDescriptionEnricher | None = None,
     ):
         """Build a scraper pipeline with optional dependency overrides."""
         self.config = config
@@ -49,8 +51,8 @@ class LinkedInJobScraper:
         )
 
         self.description_processor: JobDescriptionProcessor | None = None
-        if self.config.openai_enabled:
-            self.description_processor = self._create_description_processor(openai_handler)
+        if self.config.enrichment_provider is not EnrichmentProvider.NONE:
+            self.description_processor = self._create_description_processor(enricher)
 
     def _initialize_advanced_config(self) -> None:
         """Load optional overrides from the advanced config object."""
@@ -64,13 +66,10 @@ class LinkedInJobScraper:
             self.skills_categories = self.config.advanced_config.SKILLS_CATEGORIES
 
     def _create_description_processor(
-        self, openai_handler: JobDescriptionEnricher | None
+        self, enricher: JobDescriptionEnricher | None
     ) -> JobDescriptionProcessor | None:
         try:
-            handler = openai_handler or OpenAIHandler(
-                self.logger,
-                model=self.config.openai_model,
-            )
+            handler = enricher or self._build_enricher()
         except Exception:
             if self.config.enrichment_required:
                 self.logger.exception(
@@ -78,10 +77,15 @@ class LinkedInJobScraper:
                 )
                 raise
             self.logger.exception(
-                "OpenAI enrichment requested but initialization failed. Continuing without it."
+                "Enrichment requested but initialization failed. Continuing without it."
             )
             return None
         return JobDescriptionProcessor(handler, self.logger)
+
+    def _build_enricher(self) -> JobDescriptionEnricher:
+        if self.config.enrichment_provider is EnrichmentProvider.ANTHROPIC:
+            return AnthropicHandler(self.logger, model=self.config.enrichment_model)
+        return OpenAIHandler(self.logger, model=self.config.enrichment_model)
 
     def run(self) -> pd.DataFrame:
         """Run the end-to-end scrape pipeline and return the resulting dataframe."""
@@ -111,14 +115,15 @@ class LinkedInJobScraper:
             jobs_with_details = self.fetch_job_details(classified_jobs)
             cleaned_jobs_with_details = self.clean_job_details(jobs_with_details)
 
-            if not self.config.openai_enabled or self.description_processor is None:
-                if self.config.openai_enabled and self.description_processor is None:
+            enrichment_enabled = self.config.enrichment_provider is not EnrichmentProvider.NONE
+            if not enrichment_enabled or self.description_processor is None:
+                if enrichment_enabled and self.description_processor is None:
                     self.logger.warning(
-                        "OpenAI enrichment unavailable. Returning jobs with extracted details only."
+                        "Enrichment unavailable. Returning jobs with extracted details only."
                     )
                 else:
                     self.logger.info(
-                        "OpenAI enrichment disabled. Returning jobs with extracted details only."
+                        "Enrichment disabled. Returning jobs with extracted details only."
                     )
                 return cleaned_jobs_with_details
 

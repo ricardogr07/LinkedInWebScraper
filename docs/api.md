@@ -20,6 +20,8 @@
 
 ::: linkedin_web_scraper.config.openai
 
+::: linkedin_web_scraper.config.anthropic
+
 ::: linkedin_web_scraper.config.storage
 
 ::: linkedin_web_scraper.config.runtime
@@ -53,6 +55,10 @@
 ::: linkedin_web_scraper.infra.openai.openai_handler
 
 ::: linkedin_web_scraper.infra.openai.job_description_processor
+
+## Anthropic
+
+::: linkedin_web_scraper.infra.anthropic.anthropic_handler
 
 ## Storage
 

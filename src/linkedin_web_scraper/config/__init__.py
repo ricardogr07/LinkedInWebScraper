@@ -1,5 +1,6 @@
 """Public configuration models, options, and constants."""
 
+from linkedin_web_scraper.config.anthropic import DEFAULT_ANTHROPIC_MODEL
 from linkedin_web_scraper.config.constants import (
     DATA_SCIENCE_KEYWORDS,
     LOCATION_MAPPING,
@@ -13,7 +14,7 @@ from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAd
 from linkedin_web_scraper.config.job_scraper_config import JobScraperConfig
 from linkedin_web_scraper.config.job_scraper_config_factory import JobScraperConfigFactory
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
-from linkedin_web_scraper.config.options import RemoteType, TimePosted
+from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, TimePosted
 from linkedin_web_scraper.config.runtime import (
     DEFAULT_RUNTIME_CONFIG_FILE,
     ExportRuntimeConfig,
@@ -34,10 +35,12 @@ __all__ = [
     "DATA_SCIENCE_KEYWORDS",
     "TECH_STACK_CATEGORIES",
     "normalize_location_name",
+    "DEFAULT_ANTHROPIC_MODEL",
     "DEFAULT_OPENAI_MODEL",
     "DEFAULT_RUNTIME_CONFIG_FILE",
     "DEFAULT_SQLITE_DB_FILE",
     "build_sqlite_storage_url",
+    "EnrichmentProvider",
     "ExportRuntimeConfig",
     "JobScraperAdvancedConfig",
     "JobScraperConfig",

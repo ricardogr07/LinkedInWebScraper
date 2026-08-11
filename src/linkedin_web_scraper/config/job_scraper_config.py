@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from linkedin_web_scraper.config.job_scraper_advanced_config import JobScraperAdvancedConfig
 from linkedin_web_scraper.config.openai import DEFAULT_OPENAI_MODEL
-from linkedin_web_scraper.config.options import RemoteType, TimePosted
+from linkedin_web_scraper.config.options import EnrichmentProvider, RemoteType, TimePosted
 
 
 def _normalize_time_posted(value: str | TimePosted) -> TimePosted:
@@ -21,15 +21,22 @@ def _normalize_remote_type(value: str | RemoteType) -> RemoteType:
     return RemoteType(value.upper())
 
 
+def _normalize_enrichment_provider(value: str | EnrichmentProvider) -> EnrichmentProvider:
+    """Normalize user-facing enrichment-provider values to the enum form."""
+    if isinstance(value, EnrichmentProvider):
+        return value
+    return EnrichmentProvider(value.upper())
+
+
 @dataclass(slots=True)
 class JobScraperConfig:
     """Typed runtime configuration for a single LinkedIn scrape."""
 
     position: str
     location: str
-    openai_enabled: bool = False
+    enrichment_provider: EnrichmentProvider = EnrichmentProvider.NONE
     enrichment_required: bool = False
-    openai_model: str = DEFAULT_OPENAI_MODEL
+    enrichment_model: str = DEFAULT_OPENAI_MODEL
     time_posted: TimePosted = TimePosted.DAY
     remote: RemoteType = RemoteType.ALL
     distance: int = 10
@@ -38,8 +45,9 @@ class JobScraperConfig:
     def __post_init__(self) -> None:
         self.position = self.position.strip()
         self.location = self.location.strip()
-        self.openai_model = (
-            self.openai_model or DEFAULT_OPENAI_MODEL
+        self.enrichment_provider = _normalize_enrichment_provider(self.enrichment_provider)
+        self.enrichment_model = (
+            self.enrichment_model or DEFAULT_OPENAI_MODEL
         ).strip() or DEFAULT_OPENAI_MODEL
         self.time_posted = _normalize_time_posted(self.time_posted)
         self.remote = _normalize_remote_type(self.remote)
@@ -49,8 +57,8 @@ class JobScraperConfig:
         return (
             "JobScraperConfig("
             f"position={self.position}, location={self.location}, "
-            f"openai_enabled={self.openai_enabled}, "
+            f"enrichment_provider={self.enrichment_provider}, "
             f"enrichment_required={self.enrichment_required}, "
-            f"openai_model={self.openai_model}, "
+            f"enrichment_model={self.enrichment_model}, "
             f"time_posted={self.time_posted}, remote={self.remote}, distance={self.distance})"
         )

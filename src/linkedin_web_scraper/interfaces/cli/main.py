@@ -39,11 +39,8 @@ def build_parser() -> argparse.ArgumentParser:
     once_parser.add_argument("--remote-types", nargs="+")
     once_parser.add_argument("--file-name")
     once_parser.add_argument("--output-dir")
-    once_parser.add_argument("--openai-model")
-    once_openai_group = once_parser.add_mutually_exclusive_group()
-    once_openai_group.add_argument("--openai-enabled", dest="openai_enabled", action="store_true")
-    once_openai_group.add_argument("--openai-disabled", dest="openai_enabled", action="store_false")
-    once_parser.set_defaults(openai_enabled=None)
+    once_parser.add_argument("--enrichment-provider", choices=["none", "openai", "anthropic"])
+    once_parser.add_argument("--enrichment-model")
     once_append_group = once_parser.add_mutually_exclusive_group()
     once_append_group.add_argument("--append", dest="append", action="store_true")
     once_append_group.add_argument("--no-append", dest="append", action="store_false")
@@ -59,13 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
     daily_parser.add_argument("--time-posted")
     daily_parser.add_argument("--combined-file-name")
     daily_parser.add_argument("--output-dir")
-    daily_parser.add_argument("--openai-model")
-    daily_openai_group = daily_parser.add_mutually_exclusive_group()
-    daily_openai_group.add_argument("--openai-enabled", dest="openai_enabled", action="store_true")
-    daily_openai_group.add_argument(
-        "--openai-disabled", dest="openai_enabled", action="store_false"
-    )
-    daily_parser.set_defaults(openai_enabled=None)
+    daily_parser.add_argument("--enrichment-provider", choices=["none", "openai", "anthropic"])
+    daily_parser.add_argument("--enrichment-model")
 
     export_parser = subparsers.add_parser(
         "export",
@@ -100,10 +92,10 @@ def _apply_once_overrides(runtime_config: RuntimeConfig, args: argparse.Namespac
         config.file_name = args.file_name
     if getattr(args, "output_dir", None):
         config.output_dir = args.output_dir
-    if getattr(args, "openai_model", None):
-        config.openai_model = args.openai_model
-    if getattr(args, "openai_enabled", None) is not None:
-        config.openai_enabled = args.openai_enabled
+    if getattr(args, "enrichment_model", None):
+        config.enrichment_model = args.enrichment_model
+    if getattr(args, "enrichment_provider", None):
+        config.enrichment_provider = args.enrichment_provider
     if getattr(args, "append", None) is not None:
         config.append = args.append
     config.__post_init__()
@@ -121,10 +113,10 @@ def _apply_daily_overrides(runtime_config: RuntimeConfig, args: argparse.Namespa
         config.combined_file_name = args.combined_file_name
     if getattr(args, "output_dir", None):
         config.output_dir = args.output_dir
-    if getattr(args, "openai_model", None):
-        config.openai_model = args.openai_model
-    if getattr(args, "openai_enabled", None) is not None:
-        config.openai_enabled = args.openai_enabled
+    if getattr(args, "enrichment_model", None):
+        config.enrichment_model = args.enrichment_model
+    if getattr(args, "enrichment_provider", None):
+        config.enrichment_provider = args.enrichment_provider
     config.__post_init__()
 
 

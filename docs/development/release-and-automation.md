@@ -121,7 +121,7 @@ The workflow includes:
 ## Operating Notes
 
 - Keep secrets out of TOML and out of the repo.
-- If you enable OpenAI for scheduled runs later, do it by combining a repo secret with `openai_enabled = true` in `.github/runtime/daily.toml` or a workflow env override.
+- Scheduled enrichment is controlled by combining a repo secret (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`) with `enrichment_provider = "openai"` or `"anthropic"` in `.github/runtime/daily.toml` or a workflow env override.
 - The persistence contract for GitHub-hosted automation: the canonical `linkedin_jobs.sqlite` lives as an asset on the rolling `data-latest` release (2 GiB per-file limit, kept out of git history); CSV exports live on the `data` branch. A future cloud database can replace the release asset without changing the CLI surface.
 - Rollback for state: every run also uploads `artifacts/state` as a workflow artifact with 14-day retention; re-upload a prior day's database to the `data-latest` release to roll back.
 - Use `python -m tox -e preflight` before risky pushes or merges. That local gate runs the same smoke, lint, type, docs, and build checks that the repo expects before release work.
