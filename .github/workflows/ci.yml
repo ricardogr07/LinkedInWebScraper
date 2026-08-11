@@ -71,16 +71,19 @@ jobs:
   mssql-storage:
     name: Storage tests (mssql)
     runs-on: ubuntu-latest
+    # options does not support the ${{ }} expression context, so the CI-only
+    # throwaway password is a literal here, matched in services.mssql.env and
+    # the pytest step's connection URL below.
     services:
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: "Y"
-          MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_TEST_SA_PASSWORD || 'LinkedInScraper-CI-1!' }}
+          MSSQL_SA_PASSWORD: "LinkedInScraperCI1x"
         ports:
           - 1433:1433
         options: >-
-          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P '${{ secrets.MSSQL_TEST_SA_PASSWORD || 'LinkedInScraper-CI-1!' }}' -Q 'SELECT 1'"
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P LinkedInScraperCI1x -Q 'SELECT 1'"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -106,7 +109,7 @@ jobs:
 
       - name: Run storage test suite against mssql
         env:
-          LINKEDIN_WEB_SCRAPER_TEST_MSSQL_URL: "mssql+pyodbc://sa:${{ secrets.MSSQL_TEST_SA_PASSWORD || 'LinkedInScraper-CI-1!' }}@localhost:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+          LINKEDIN_WEB_SCRAPER_TEST_MSSQL_URL: "mssql+pyodbc://sa:LinkedInScraperCI1x@localhost:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
         run: pytest -q tests/test_mssql_scrape_storage.py tests/test_sqlite_scrape_storage.py
 
   quality:
