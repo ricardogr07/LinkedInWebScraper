@@ -183,13 +183,27 @@ def _coerce_mapping(value: object, label: str) -> Mapping[str, Any]:
     return {str(key): inner_value for key, inner_value in value.items()}
 
 
+def _apply_legacy_enrichment_keys(data: dict[str, Any]) -> dict[str, Any]:
+    """Map pre-rename openai_enabled/openai_model keys onto the new fields."""
+    if "openai_enabled" in data:
+        openai_enabled = data.pop("openai_enabled")
+        data.setdefault("enrichment_provider", "openai" if _normalize_bool(openai_enabled) else "none")
+    if "openai_model" in data:
+        data.setdefault("enrichment_model", data.pop("openai_model"))
+    return data
+
+
 def runtime_config_from_mapping(data: Mapping[str, Any]) -> RuntimeConfig:
     """Build a runtime config object from TOML-compatible nested mappings."""
     logging_data = _coerce_mapping(data.get("logging"), "logging")
     storage_data = _coerce_mapping(data.get("storage"), "storage")
     scrape_data = _coerce_mapping(data.get("scrape"), "scrape")
-    scrape_once_data = _coerce_mapping(scrape_data.get("once"), "scrape.once")
-    scrape_daily_data = _coerce_mapping(scrape_data.get("daily"), "scrape.daily")
+    scrape_once_data = _apply_legacy_enrichment_keys(
+        dict(_coerce_mapping(scrape_data.get("once"), "scrape.once"))
+    )
+    scrape_daily_data = _apply_legacy_enrichment_keys(
+        dict(_coerce_mapping(scrape_data.get("daily"), "scrape.daily"))
+    )
     export_data = _coerce_mapping(data.get("export"), "export")
 
     return RuntimeConfig(
