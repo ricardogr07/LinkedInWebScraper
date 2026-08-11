@@ -39,7 +39,7 @@ def test_mssql_storage_persists_run_and_jobs():
         context = ScrapeRunContext(
             position="Data Scientist",
             location="Monterrey",
-            openai_enabled=False,
+            enrichment_provider="NONE",
             time_posted="DAY",
         )
         run_id = storage.begin_run(context)
@@ -59,7 +59,7 @@ def test_mssql_storage_round_trips_spanish_unicode_text():
         context = ScrapeRunContext(
             position="Cientifico de Datos",
             location="Ciudad de Mexico",
-            openai_enabled=False,
+            enrichment_provider="NONE",
             time_posted="DAY",
         )
         run_id = storage.begin_run(context)
